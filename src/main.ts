@@ -8,6 +8,10 @@ type AddCupReturnType = Promise<{
   destroy: () => void
 }>
 
+const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
+const buttonElement = document.querySelector('.button') as HTMLButtonElement
+const imageContainerElement = document.querySelector('.image-container') as HTMLDivElement
+
 let dragTarget: Sprite | null = null
 
 const addCup = async (app: Application): AddCupReturnType => {
@@ -18,13 +22,14 @@ const addCup = async (app: Application): AddCupReturnType => {
 }
 
 const app = new Application({
-  view: document.querySelector('#canvas') as HTMLCanvasElement,
+  view: canvasElement,
   width: 800,
   height: 600,
   // autoDensity: true,
   // resizeTo: window,
   // powerPreference: 'high-performance',
   backgroundColor: 0x1099bb,
+  preserveDrawingBuffer: true,
 })
 
 const onDragMove = (event: FederatedPointerEvent) => {
@@ -68,5 +73,11 @@ Promise.all(
   })
 })
 
-// app.stage.removeChild(cup)
-// cup.destroy()
+buttonElement.addEventListener('click', () => {
+  const dataURL = canvasElement.toDataURL()
+  const dataURL2 = canvasElement.toDataURL('image/jpeg')
+  console.log({ dataURL: new Blob([dataURL]).size / 1000 + 'kB', dataURL2: new Blob([dataURL2]).size / 1000 + 'kB' })
+  console.log(dataURL)
+  console.log(dataURL2)
+  imageContainerElement.innerHTML = `<img src="${dataURL}" width="100" height="100" />`
+})
