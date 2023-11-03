@@ -2,6 +2,7 @@ import { Application, Sprite, Assets, FederatedPointerEvent } from 'pixi.js'
 import cupImage from '@/assets/images/cup.png'
 import './style.css'
 import { addSprite } from './utils/add-sprite'
+import { resizeImage } from './utils/resizeImage'
 
 type AddCupReturnType = Promise<{
   cup: Sprite
@@ -23,8 +24,8 @@ const addCup = async (app: Application): AddCupReturnType => {
 
 const app = new Application({
   view: canvasElement,
-  width: 800,
-  height: 600,
+  width: 1200,
+  height: 630,
   // autoDensity: true,
   // resizeTo: window,
   // powerPreference: 'high-performance',
@@ -73,11 +74,32 @@ Promise.all(
   })
 })
 
-buttonElement.addEventListener('click', () => {
+buttonElement.addEventListener('click', async () => {
   const dataURL = canvasElement.toDataURL()
-  const dataURL2 = canvasElement.toDataURL('image/jpeg')
-  console.log({ dataURL: new Blob([dataURL]).size / 1000 + 'kB', dataURL2: new Blob([dataURL2]).size / 1000 + 'kB' })
-  console.log(dataURL)
-  console.log(dataURL2)
+  const dataURL2 = canvasElement.toDataURL('image/jpeg', 0.5)
+  const canvasAspectRatio = canvasElement.width / canvasElement.height
+  const dataURL3 = await resizeImage(dataURL2, canvasAspectRatio, 300)
+
+  console.log({
+    dataURL: new Blob([dataURL]).size / 1000 + 'kB',
+    dataURL2: new Blob([dataURL2]).size / 1000 + 'kB',
+    dataURL3: new Blob([dataURL3]).size / 1000 + 'kB',
+  })
+
   imageContainerElement.innerHTML = `<img src="${dataURL}" width="100" height="100" />`
+
+  const apiEndpoint = 'https://27bfwxzjpj7jyk2hthonyyerru0wryet.lambda-url.ap-northeast-1.on.aws/'
+
+  const data = { imageData: dataURL3 }
+
+  const res = await fetch(apiEndpoint, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    throw new Error('Network response was not ok')
+  }
+  const json = await res.json()
+  console.log(json)
 })
