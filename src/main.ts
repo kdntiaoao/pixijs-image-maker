@@ -3,6 +3,11 @@ import { addSprite } from './utils/add-sprite'
 import { resizeImage } from './utils/resize-image'
 import { getXShareUrl } from './utils/get-x-share-url'
 import cupImage from '@/assets/images/cup.png'
+import dogImage from '@/assets/images/dog.png'
+import cherryBlossomImage from '@/assets/images/cherry-blossom.png'
+import doveImage from '@/assets/images/dove.png'
+import kettleImage from '@/assets/images/kettle.png'
+import potImage from '@/assets/images/pot.png'
 import './style.css'
 
 type AddCupReturnType = Promise<{
@@ -11,7 +16,13 @@ type AddCupReturnType = Promise<{
 }>
 
 const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
-const buttonElement = document.querySelector('.button') as HTMLButtonElement
+const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
+const dogButtonElement = document.querySelector('[data-button="dog"]') as HTMLButtonElement
+const cherryBlossomButtonElement = document.querySelector('[data-button="cherry-blossom"]') as HTMLButtonElement
+const cupButtonElement = document.querySelector('[data-button="cup"]') as HTMLButtonElement
+const doveButtonElement = document.querySelector('[data-button="dove"]') as HTMLButtonElement
+const kettleButtonElement = document.querySelector('[data-button="kettle"]') as HTMLButtonElement
+const potButtonElement = document.querySelector('[data-button="pot"]') as HTMLButtonElement
 
 let dragTarget: Sprite | null = null
 
@@ -22,8 +33,9 @@ const addCup = async (app: Application): AddCupReturnType => {
   return { cup: sprite, destroy }
 }
 
-const canvasWidth = Math.min(window.innerWidth * 0.8, 1200)
-const canvasHeight = (canvasWidth * 630) / 1200
+const canvasWidth = Math.min(window.innerWidth * 0.95, 1200)
+const canvasAspectRatio = 1200 / 630
+const canvasHeight = canvasWidth / canvasAspectRatio
 const resizeRatio = window.devicePixelRatio || 1
 
 const app = new Application({
@@ -77,7 +89,7 @@ Promise.all(
   })
 })
 
-buttonElement.addEventListener('click', async () => {
+shareButtonElement.addEventListener('click', async () => {
   const dataURL = canvasElement.toDataURL()
   const dataURL2 = canvasElement.toDataURL('image/jpeg', 0.5)
   const canvasAspectRatio = canvasElement.width / canvasElement.height
@@ -107,4 +119,50 @@ buttonElement.addEventListener('click', async () => {
     const text = ['PixiJSで作った画像をXでシェアする', '', json.link]
     window.open(getXShareUrl(text))
   }
+})
+
+dogButtonElement.addEventListener('click', async () => {
+  const texture = await Assets.load(dogImage)
+  const { sprite } = addSprite(app, texture)
+  sprite.x = app.screen.width / 2
+  sprite.y = app.screen.height / 2
+  sprite.on('pointerdown', () => onDragStart(sprite))
+})
+cherryBlossomButtonElement.addEventListener('click', async () => {
+  const texture = await Assets.load(cherryBlossomImage)
+  const { sprite } = addSprite(app, texture)
+  sprite.x = app.screen.width / 2
+  sprite.y = app.screen.height / 2
+  sprite.on('pointerdown', () => onDragStart(sprite))
+})
+cupButtonElement.addEventListener('click', async () => {
+  const texture = await Assets.load(cupImage)
+  const { sprite } = addSprite(app, texture)
+  sprite.x = app.screen.width / 2
+  sprite.y = app.screen.height / 2
+  sprite.on('pointerdown', () => onDragStart(sprite))
+})
+
+doveButtonElement.addEventListener('click', async () => {
+  const texture = await Assets.load(doveImage)
+  const { sprite } = addSprite(app, texture)
+  sprite.x = app.screen.width / 2
+  sprite.y = app.screen.height / 2
+  sprite.on('pointerdown', () => onDragStart(sprite))
+})
+
+kettleButtonElement.addEventListener('click', async () => {
+  const texture = await Assets.load(kettleImage)
+  const { sprite } = addSprite(app, texture)
+  sprite.x = app.screen.width / 2
+  sprite.y = app.screen.height / 2
+  sprite.on('pointerdown', () => onDragStart(sprite))
+})
+
+potButtonElement.addEventListener('click', async () => {
+  const texture = await Assets.load(potImage)
+  const { sprite } = addSprite(app, texture)
+  sprite.x = app.screen.width / 2
+  sprite.y = app.screen.height / 2
+  sprite.on('pointerdown', () => onDragStart(sprite))
 })

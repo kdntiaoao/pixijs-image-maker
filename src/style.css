@@ -1,4 +1,34 @@
 img {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   object-position: center;
+}
+
+button {
+  padding: 4px;
+  margin: 0;
+  background-color: transparent;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px #ccc;
+  pointer-events: cursor;
+}
+
+.canvas {
+  display: block;
+  margin: 20px auto;
+}
+
+.icon-button-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-button {
+  display: block;
+  width: min(10vw, 44px);
+  aspect-ratio: 1;
 }

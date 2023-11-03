@@ -12,7 +12,7 @@ export const addSprite = (app: Application, texture: Texture): { sprite: Sprite;
   sprite.eventMode = 'static'
   sprite.cursor = 'pointer'
 
-  sprite.width = 100
+  sprite.width = app.screen.width / 8
   sprite.height = sprite.width / spriteAspectRatio
 
   sprite.x = app.renderer.width / 2
