@@ -1,8 +1,9 @@
 import { Application, Sprite, Assets, FederatedPointerEvent } from 'pixi.js'
+import { addSprite } from './utils/add-sprite'
+import { resizeImage } from './utils/resize-image'
+import { getXShareUrl } from './utils/get-x-share-url'
 import cupImage from '@/assets/images/cup.png'
 import './style.css'
-import { addSprite } from './utils/add-sprite'
-import { resizeImage } from './utils/resizeImage'
 
 type AddCupReturnType = Promise<{
   cup: Sprite
@@ -11,7 +12,6 @@ type AddCupReturnType = Promise<{
 
 const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
 const buttonElement = document.querySelector('.button') as HTMLButtonElement
-const imageContainerElement = document.querySelector('.image-container') as HTMLDivElement
 
 let dragTarget: Sprite | null = null
 
@@ -22,12 +22,16 @@ const addCup = async (app: Application): AddCupReturnType => {
   return { cup: sprite, destroy }
 }
 
+const canvasWidth = Math.min(window.innerWidth * 0.8, 1200)
+const canvasHeight = (canvasWidth * 630) / 1200
+const resizeRatio = window.devicePixelRatio || 1
+
 const app = new Application({
   view: canvasElement,
-  width: 1200,
-  height: 630,
-  // autoDensity: true,
-  // resizeTo: window,
+  width: canvasWidth,
+  height: canvasHeight,
+  autoDensity: true,
+  resolution: resizeRatio,
   // powerPreference: 'high-performance',
   backgroundColor: 0x1099bb,
   preserveDrawingBuffer: true,
@@ -65,10 +69,9 @@ Promise.all(
 ).then((cups) => {
   cups.forEach(({ cup }, i) => {
     cup.x =
-      (((app.renderer.width * i) / (cups.length - 1)) * (app.renderer.width - cup.width)) / app.renderer.width +
-      cup.width / 2
+      (((app.screen.width * i) / (cups.length - 1)) * (app.screen.width - cup.width)) / app.screen.width + cup.width / 2
     cup.y =
-      (((app.renderer.height * i) / (cups.length - 1)) * (app.renderer.height - cup.height)) / app.renderer.height +
+      (((app.screen.height * i) / (cups.length - 1)) * (app.screen.height - cup.height)) / app.screen.height +
       cup.height / 2
     cup.on('pointerdown', () => onDragStart(cup))
   })
@@ -86,20 +89,22 @@ buttonElement.addEventListener('click', async () => {
     dataURL3: new Blob([dataURL3]).size / 1000 + 'kB',
   })
 
-  imageContainerElement.innerHTML = `<img src="${dataURL}" width="100" height="100" />`
-
   const apiEndpoint = 'https://27bfwxzjpj7jyk2hthonyyerru0wryet.lambda-url.ap-northeast-1.on.aws/'
-
-  const data = { imageData: dataURL3 }
 
   const res = await fetch(apiEndpoint, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({ imageData: dataURL2 }),
   })
 
   if (!res.ok) {
     throw new Error('Network response was not ok')
   }
-  const json = await res.json()
+
+  const json = (await res.json()) as { message: string; image?: string; link?: string }
   console.log(json)
+
+  if (json.link) {
+    const text = ['PixiJSで作った画像をXでシェアする', '', json.link]
+    window.open(getXShareUrl(text))
+  }
 })
