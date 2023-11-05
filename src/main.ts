@@ -1,19 +1,15 @@
 import { Application, Assets, FederatedPointerEvent } from 'pixi.js'
-import { CustomSprite, addSprite } from './utils/add-sprite'
-import { resizeImage } from './utils/resize-image'
-import { getXShareUrl } from './utils/get-x-share-url'
+
+import { type CustomSprite, addSprite, download, share, sleep } from './utils'
+
 import cupImage from '@/assets/images/cup.png'
 import dogImage from '@/assets/images/dog.png'
 import cherryBlossomImage from '@/assets/images/cherry-blossom.png'
 import doveImage from '@/assets/images/dove.png'
 import kettleImage from '@/assets/images/kettle.png'
 import potImage from '@/assets/images/pot.png'
-import './style.css'
 
-type AddCupReturnType = Promise<{
-  cup: CustomSprite
-  destroy: () => void
-}>
+import './style.css'
 
 const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
 const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
@@ -36,13 +32,6 @@ const deleteButtonElement = document.querySelector('[data-button="delete"]') as 
 
 let draggedSprite: CustomSprite | null = null
 let selectedSprite: CustomSprite | null = null
-
-const addCup = async (app: Application): AddCupReturnType => {
-  const texture = await Assets.load(cupImage)
-  const { sprite, destroy } = addSprite(app, texture)
-
-  return { cup: sprite, destroy }
-}
 
 const canvasWidth = 1200
 const canvasAspectRatio = 1200 / 630
@@ -88,121 +77,74 @@ app.stage.on('pointerupoutside', onDragEnd)
 Promise.all(
   Array(5)
     .fill(null)
-    .map((_) => addCup(app))
+    .map((_) => Assets.load(cupImage).then((texture) => addSprite(app, texture)))
 ).then((cups) => {
-  cups.forEach(({ cup }, i) => {
-    cup.x =
-      (((app.screen.width * i) / (cups.length - 1)) * (app.screen.width - cup.width)) / app.screen.width + cup.width / 2
-    cup.y =
-      (((app.screen.height * i) / (cups.length - 1)) * (app.screen.height - cup.height)) / app.screen.height +
-      cup.height / 2
-    cup.on('pointerdown', () => onDragStart(cup))
+  cups.forEach(({ sprite }, i) => {
+    sprite.x =
+      (((app.screen.width * i) / (cups.length - 1)) * (app.screen.width - sprite.width)) / app.screen.width +
+      sprite.width / 2
+    sprite.y =
+      (((app.screen.height * i) / (cups.length - 1)) * (app.screen.height - sprite.height)) / app.screen.height +
+      sprite.height / 2
+    sprite.on('pointerdown', () => onDragStart(sprite))
   })
 })
 
 shareButtonElement.addEventListener('click', async () => {
   if (selectedSprite) {
     selectedSprite.alpha = 1
+  } else {
+    console.log('No selected sprite')
   }
 
   messageElement.textContent = '画像を生成しています...'
 
-  const dataURL = canvasElement.toDataURL()
-  const dataURL2 = canvasElement.toDataURL('image/jpeg', 0.5)
-  const canvasAspectRatio = canvasElement.width / canvasElement.height
-  const dataURL3 = await resizeImage(dataURL2, canvasAspectRatio, 300)
+  // 選択されていたSpriteのalphaを1に戻すのを待つ
+  await sleep(100)
 
-  console.log({
-    dataURL: new Blob([dataURL]).size / 1000 + 'kB',
-    dataURL2: new Blob([dataURL2]).size / 1000 + 'kB',
-    dataURL3: new Blob([dataURL3]).size / 1000 + 'kB',
-  })
-
-  const apiEndpoint = 'https://27bfwxzjpj7jyk2hthonyyerru0wryet.lambda-url.ap-northeast-1.on.aws/'
-
-  const res = await fetch(apiEndpoint, {
-    method: 'POST',
-    body: JSON.stringify({ imageData: dataURL2 }),
-  })
-
-  if (!res.ok) {
-    messageElement.textContent = '画像の生成に失敗しました'
-    throw new Error('Network response was not ok')
-  }
-
-  const json = (await res.json()) as { message: string; image?: string; link?: string }
-  console.log(json)
-
-  if (json.link) {
+  try {
+    await share(canvasElement)
     messageElement.textContent = '画像を生成しました！'
-    const text = ['PixiJSで作った画像をXでシェアする', '', json.link]
-    window.open(getXShareUrl(text))
+  } catch (error) {
+    messageElement.textContent = '画像の生成に失敗しました'
   }
 })
 
-downloadButtonElement.addEventListener('click', () => {
+downloadButtonElement.addEventListener('click', async () => {
   if (selectedSprite) {
     selectedSprite.alpha = 1
+  } else {
+    console.log('No selected sprite')
   }
 
-  const dataURL = canvasElement.toDataURL()
-  const dataURL2 = canvasElement.toDataURL('image/jpeg', 0.5)
+  // 選択されていたSpriteのalphaを1に戻すのを待つ
+  await sleep(100)
 
-  console.log({
-    dataURL: new Blob([dataURL]).size / 1000 + 'kB',
-    dataURL2: new Blob([dataURL2]).size / 1000 + 'kB',
+  download(canvasElement)
+})
+
+//
+;[
+  { element: dogButtonElement, image: dogImage },
+  { element: cherryBlossomButtonElement, image: cherryBlossomImage },
+  { element: cupButtonElement, image: cupImage },
+  { element: doveButtonElement, image: doveImage },
+  { element: kettleButtonElement, image: kettleImage },
+  { element: potButtonElement, image: potImage },
+].forEach(({ element, image }) => {
+  element.addEventListener('click', async () => {
+    if (selectedSprite) {
+      selectedSprite.alpha = 1
+    }
+
+    const texture = await Assets.load(image)
+    const { sprite } = addSprite(app, texture)
+    sprite.x = app.screen.width / 2
+    sprite.y = app.screen.height / 2
+    sprite.alpha = 0.5
+    sprite.on('pointerdown', () => onDragStart(sprite))
+    selectedSprite = sprite
   })
-
-  const a = document.createElement('a')
-  a.href = dataURL2
-  a.download = 'pixijs-image.jpg'
-  a.click()
-})
-
-dogButtonElement.addEventListener('click', async () => {
-  const texture = await Assets.load(dogImage)
-  const { sprite } = addSprite(app, texture)
-  sprite.x = app.screen.width / 2
-  sprite.y = app.screen.height / 2
-  sprite.on('pointerdown', () => onDragStart(sprite))
-})
-cherryBlossomButtonElement.addEventListener('click', async () => {
-  const texture = await Assets.load(cherryBlossomImage)
-  const { sprite } = addSprite(app, texture)
-  sprite.x = app.screen.width / 2
-  sprite.y = app.screen.height / 2
-  sprite.on('pointerdown', () => onDragStart(sprite))
-})
-cupButtonElement.addEventListener('click', async () => {
-  const texture = await Assets.load(cupImage)
-  const { sprite } = addSprite(app, texture)
-  sprite.x = app.screen.width / 2
-  sprite.y = app.screen.height / 2
-  sprite.on('pointerdown', () => onDragStart(sprite))
-})
-
-doveButtonElement.addEventListener('click', async () => {
-  const texture = await Assets.load(doveImage)
-  const { sprite } = addSprite(app, texture)
-  sprite.x = app.screen.width / 2
-  sprite.y = app.screen.height / 2
-  sprite.on('pointerdown', () => onDragStart(sprite))
-})
-
-kettleButtonElement.addEventListener('click', async () => {
-  const texture = await Assets.load(kettleImage)
-  const { sprite } = addSprite(app, texture)
-  sprite.x = app.screen.width / 2
-  sprite.y = app.screen.height / 2
-  sprite.on('pointerdown', () => onDragStart(sprite))
-})
-
-potButtonElement.addEventListener('click', async () => {
-  const texture = await Assets.load(potImage)
-  const { sprite } = addSprite(app, texture)
-  sprite.x = app.screen.width / 2
-  sprite.y = app.screen.height / 2
-  sprite.on('pointerdown', () => onDragStart(sprite))
 })
 
 upwardButtonElement.addEventListener('click', () => {
