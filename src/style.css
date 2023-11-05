@@ -1,3 +1,8 @@
+body {
+  font-family: 'Helvetica Neue', 'Helvetica', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Arial', 'Yu Gothic',
+    'Meiryo', sans-serif;
+}
+
 img {
   display: block;
   width: 100%;
@@ -12,19 +17,35 @@ button {
   background-color: transparent;
   border: 1px solid #ccc;
   border-radius: 4px;
-  box-shadow: 0 1px 4px #ccc;
-  pointer-events: cursor;
+  box-shadow: 0 0 2px #ccc;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+button:hover {
+  box-shadow: 0 0 4px #bbb;
+}
+
+.heading {
+  font-size: clamp(24px, 2.5vw, 32px);
+  margin: 8px 0;
+  letter-spacing: 0.05em;
 }
 
 .canvas {
   display: block;
   margin: 20px auto;
+  max-width: 100%;
+  height: auto !important;
+  aspect-ratio: 1200 / 630;
 }
 
 .icon-button-list {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  margin: 20px auto;
 }
 
 .icon-button {

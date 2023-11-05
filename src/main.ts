@@ -1,5 +1,5 @@
-import { Application, Sprite, Assets, FederatedPointerEvent } from 'pixi.js'
-import { addSprite } from './utils/add-sprite'
+import { Application, Assets, FederatedPointerEvent } from 'pixi.js'
+import { CustomSprite, addSprite } from './utils/add-sprite'
 import { resizeImage } from './utils/resize-image'
 import { getXShareUrl } from './utils/get-x-share-url'
 import cupImage from '@/assets/images/cup.png'
@@ -11,20 +11,31 @@ import potImage from '@/assets/images/pot.png'
 import './style.css'
 
 type AddCupReturnType = Promise<{
-  cup: Sprite
+  cup: CustomSprite
   destroy: () => void
 }>
 
 const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
 const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
+const downloadButtonElement = document.querySelector('[data-button="download"]') as HTMLButtonElement
+const messageElement = document.querySelector('[data-message]') as HTMLParagraphElement
 const dogButtonElement = document.querySelector('[data-button="dog"]') as HTMLButtonElement
 const cherryBlossomButtonElement = document.querySelector('[data-button="cherry-blossom"]') as HTMLButtonElement
 const cupButtonElement = document.querySelector('[data-button="cup"]') as HTMLButtonElement
 const doveButtonElement = document.querySelector('[data-button="dove"]') as HTMLButtonElement
 const kettleButtonElement = document.querySelector('[data-button="kettle"]') as HTMLButtonElement
 const potButtonElement = document.querySelector('[data-button="pot"]') as HTMLButtonElement
+const upwardButtonElement = document.querySelector('[data-button="upward"]') as HTMLButtonElement
+const downwardButtonElement = document.querySelector('[data-button="downward"]') as HTMLButtonElement
+const leftButtonElement = document.querySelector('[data-button="left"]') as HTMLButtonElement
+const rightButtonElement = document.querySelector('[data-button="right"]') as HTMLButtonElement
+const zoomInButtonElement = document.querySelector('[data-button="zoom-in"]') as HTMLButtonElement
+const zoomOutButtonElement = document.querySelector('[data-button="zoom-out"]') as HTMLButtonElement
+const rotateButtonElement = document.querySelector('[data-button="rotate"]') as HTMLButtonElement
+const deleteButtonElement = document.querySelector('[data-button="delete"]') as HTMLButtonElement
 
-let dragTarget: Sprite | null = null
+let draggedSprite: CustomSprite | null = null
+let selectedSprite: CustomSprite | null = null
 
 const addCup = async (app: Application): AddCupReturnType => {
   const texture = await Assets.load(cupImage)
@@ -33,39 +44,39 @@ const addCup = async (app: Application): AddCupReturnType => {
   return { cup: sprite, destroy }
 }
 
-const canvasWidth = Math.min(window.innerWidth * 0.95, 1200)
+const canvasWidth = 1200
 const canvasAspectRatio = 1200 / 630
 const canvasHeight = canvasWidth / canvasAspectRatio
-const resizeRatio = window.devicePixelRatio || 1
 
 const app = new Application({
   view: canvasElement,
   width: canvasWidth,
   height: canvasHeight,
   autoDensity: true,
-  resolution: resizeRatio,
-  // powerPreference: 'high-performance',
-  backgroundColor: 0x1099bb,
+  powerPreference: 'high-performance',
+  backgroundColor: 0x99ccff,
   preserveDrawingBuffer: true,
 })
 
 const onDragMove = (event: FederatedPointerEvent) => {
-  if (dragTarget) {
-    dragTarget.parent.toLocal(event.global, undefined, dragTarget.position)
+  if (draggedSprite) {
+    draggedSprite.parent.toLocal(event.global, undefined, draggedSprite.position)
   }
 }
 
-const onDragStart = (sprite: Sprite) => {
+const onDragStart = (sprite: CustomSprite) => {
+  if (selectedSprite) {
+    selectedSprite.alpha = 1
+  }
   sprite.alpha = 0.5
-  dragTarget = sprite
+  draggedSprite = selectedSprite = sprite
   app.stage.on('pointermove', onDragMove)
 }
 
 const onDragEnd = () => {
-  if (dragTarget) {
+  if (draggedSprite) {
     app.stage.off('pointermove', onDragMove)
-    dragTarget.alpha = 1
-    dragTarget = null
+    draggedSprite = null
   }
 }
 
@@ -90,6 +101,12 @@ Promise.all(
 })
 
 shareButtonElement.addEventListener('click', async () => {
+  if (selectedSprite) {
+    selectedSprite.alpha = 1
+  }
+
+  messageElement.textContent = '画像を生成しています...'
+
   const dataURL = canvasElement.toDataURL()
   const dataURL2 = canvasElement.toDataURL('image/jpeg', 0.5)
   const canvasAspectRatio = canvasElement.width / canvasElement.height
@@ -109,6 +126,7 @@ shareButtonElement.addEventListener('click', async () => {
   })
 
   if (!res.ok) {
+    messageElement.textContent = '画像の生成に失敗しました'
     throw new Error('Network response was not ok')
   }
 
@@ -116,9 +134,29 @@ shareButtonElement.addEventListener('click', async () => {
   console.log(json)
 
   if (json.link) {
+    messageElement.textContent = '画像を生成しました！'
     const text = ['PixiJSで作った画像をXでシェアする', '', json.link]
     window.open(getXShareUrl(text))
   }
+})
+
+downloadButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.alpha = 1
+  }
+
+  const dataURL = canvasElement.toDataURL()
+  const dataURL2 = canvasElement.toDataURL('image/jpeg', 0.5)
+
+  console.log({
+    dataURL: new Blob([dataURL]).size / 1000 + 'kB',
+    dataURL2: new Blob([dataURL2]).size / 1000 + 'kB',
+  })
+
+  const a = document.createElement('a')
+  a.href = dataURL2
+  a.download = 'pixijs-image.jpg'
+  a.click()
 })
 
 dogButtonElement.addEventListener('click', async () => {
@@ -165,4 +203,55 @@ potButtonElement.addEventListener('click', async () => {
   sprite.x = app.screen.width / 2
   sprite.y = app.screen.height / 2
   sprite.on('pointerdown', () => onDragStart(sprite))
+})
+
+upwardButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.y -= 10
+  }
+})
+
+downwardButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.y += 10
+  }
+})
+
+leftButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.x -= 10
+  }
+})
+
+rightButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.x += 10
+  }
+})
+
+zoomInButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.scale.x *= 1.1
+    selectedSprite.scale.y *= 1.1
+  }
+})
+
+zoomOutButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.scale.x /= 1.1
+    selectedSprite.scale.y /= 1.1
+  }
+})
+
+rotateButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.rotation += Math.PI / 10
+  }
+})
+
+deleteButtonElement.addEventListener('click', () => {
+  if (selectedSprite) {
+    selectedSprite.destroySprite?.()
+    selectedSprite = null
+  }
 })
