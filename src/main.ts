@@ -74,6 +74,9 @@ app.stage.hitArea = app.screen
 app.stage.on('pointerup', onDragEnd)
 app.stage.on('pointerupoutside', onDragEnd)
 
+shareButtonElement.disabled = true
+downloadButtonElement.disabled = true
+
 shareButtonElement.addEventListener('click', async () => {
   if (selectedSprite) {
     selectedSprite.alpha = 1
@@ -130,6 +133,8 @@ downloadButtonElement.addEventListener('click', async () => {
     sprite.alpha = 0.5
     sprite.on('pointerdown', () => onDragStart(sprite))
     selectedSprite = sprite
+    shareButtonElement.disabled = false
+    downloadButtonElement.disabled = false
   })
 })
 
@@ -179,6 +184,10 @@ rotateButtonElement.addEventListener('click', () => {
 
 deleteButtonElement.addEventListener('click', () => {
   if (selectedSprite) {
+    if (app.stage.children.length <= 1) {
+      shareButtonElement.disabled = true
+      downloadButtonElement.disabled = true
+    }
     selectedSprite.destroySprite?.()
     selectedSprite = null
   }
