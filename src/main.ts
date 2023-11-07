@@ -74,22 +74,6 @@ app.stage.hitArea = app.screen
 app.stage.on('pointerup', onDragEnd)
 app.stage.on('pointerupoutside', onDragEnd)
 
-Promise.all(
-  Array(5)
-    .fill(null)
-    .map((_) => Assets.load(cupImage).then((texture) => addSprite(app, texture)))
-).then((cups) => {
-  cups.forEach(({ sprite }, i) => {
-    sprite.x =
-      (((app.screen.width * i) / (cups.length - 1)) * (app.screen.width - sprite.width)) / app.screen.width +
-      sprite.width / 2
-    sprite.y =
-      (((app.screen.height * i) / (cups.length - 1)) * (app.screen.height - sprite.height)) / app.screen.height +
-      sprite.height / 2
-    sprite.on('pointerdown', () => onDragStart(sprite))
-  })
-})
-
 shareButtonElement.addEventListener('click', async () => {
   if (selectedSprite) {
     selectedSprite.alpha = 1
@@ -139,8 +123,10 @@ downloadButtonElement.addEventListener('click', async () => {
 
     const texture = await Assets.load(image)
     const { sprite } = addSprite(app, texture)
-    sprite.x = app.screen.width / 2
-    sprite.y = app.screen.height / 2
+    const extraX = Math.random() * 100 - 50
+    const extraY = Math.random() * 100 - 50
+    sprite.x = app.screen.width / 2 + extraX
+    sprite.y = app.screen.height / 2 + extraY
     sprite.alpha = 0.5
     sprite.on('pointerdown', () => onDragStart(sprite))
     selectedSprite = sprite
