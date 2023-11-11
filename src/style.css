@@ -32,6 +32,13 @@ button:hover:not(:disabled) {
   letter-spacing: 0.05em;
 }
 
+.primary-button {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+}
+
 .canvas {
   display: block;
   margin: 20px auto;
@@ -52,4 +59,23 @@ button:hover:not(:disabled) {
   display: block;
   width: min(10vw, 44px);
   aspect-ratio: 1;
+}
+
+.form {
+  margin-top: 40px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.text-field {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 0 2px #ccc;
+  font-family: 'DotGothic16', Tofu;
 }

@@ -16,8 +16,8 @@
     </header>
     <main>
       <div class="button-list">
-        <button type="button" data-button="share">Xでシェアする</button>
-        <button type="button" data-button="download">ダウンロード</button>
+        <button type="button" data-button="share" class="primary-button">Xでシェアする</button>
+        <button type="button" data-button="download" class="primary-button">ダウンロード</button>
       </div>
 
       <p data-message class="message"></p>
@@ -72,6 +72,17 @@
           <img src="./src/assets/images/delete.png" alt="delete" loading="lazy" />
         </button>
       </div>
+
+      <form data-form class="form">
+        <input
+          type="text"
+          name="text"
+          placeholder="画像に追加したいテキストを入力してください"
+          data-text-field
+          class="text-field"
+        />
+        <button type="submit" class="primary-button">テキストを追加</button>
+      </form>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -1,6 +1,6 @@
-import { Application, Assets, FederatedPointerEvent } from 'pixi.js'
+import { Application, Assets, FederatedPointerEvent, Sprite, Text } from 'pixi.js'
 
-import { type CustomSprite, addSprite, download, share, sleep } from './utils'
+import { type CustomObject, addSprite, download, share, sleep, addText } from './utils'
 
 import cupImage from '@/assets/images/cup.png'
 import dogImage from '@/assets/images/dog.png'
@@ -29,9 +29,11 @@ const zoomInButtonElement = document.querySelector('[data-button="zoom-in"]') as
 const zoomOutButtonElement = document.querySelector('[data-button="zoom-out"]') as HTMLButtonElement
 const rotateButtonElement = document.querySelector('[data-button="rotate"]') as HTMLButtonElement
 const deleteButtonElement = document.querySelector('[data-button="delete"]') as HTMLButtonElement
+const formElement = document.querySelector('[data-form]') as HTMLFormElement
+const textFieldElement = document.querySelector('[data-text-field]') as HTMLInputElement
 
-let draggedSprite: CustomSprite | null = null
-let selectedSprite: CustomSprite | null = null
+let draggedObject: CustomObject | null = null
+let selectedObject: CustomObject | null = null
 
 const canvasWidth = 1200
 const canvasAspectRatio = 1200 / 630
@@ -48,24 +50,24 @@ const app = new Application({
 })
 
 const onDragMove = (event: FederatedPointerEvent) => {
-  if (draggedSprite) {
-    draggedSprite.parent.toLocal(event.global, undefined, draggedSprite.position)
+  if (draggedObject) {
+    draggedObject.parent.toLocal(event.global, undefined, draggedObject.position)
   }
 }
 
-const onDragStart = (sprite: CustomSprite) => {
-  if (selectedSprite) {
-    selectedSprite.alpha = 1
+const onDragStart = (sprite: CustomObject) => {
+  if (selectedObject) {
+    selectedObject.alpha = 1
   }
   sprite.alpha = 0.5
-  draggedSprite = selectedSprite = sprite
+  draggedObject = selectedObject = sprite
   app.stage.on('pointermove', onDragMove)
 }
 
 const onDragEnd = () => {
-  if (draggedSprite) {
+  if (draggedObject) {
     app.stage.off('pointermove', onDragMove)
-    draggedSprite = null
+    draggedObject = null
   }
 }
 
@@ -78,8 +80,8 @@ shareButtonElement.disabled = true
 downloadButtonElement.disabled = true
 
 shareButtonElement.addEventListener('click', async () => {
-  if (selectedSprite) {
-    selectedSprite.alpha = 1
+  if (selectedObject) {
+    selectedObject.alpha = 1
   } else {
     console.log('No selected sprite')
   }
@@ -98,8 +100,8 @@ shareButtonElement.addEventListener('click', async () => {
 })
 
 downloadButtonElement.addEventListener('click', async () => {
-  if (selectedSprite) {
-    selectedSprite.alpha = 1
+  if (selectedObject) {
+    selectedObject.alpha = 1
   } else {
     console.log('No selected sprite')
   }
@@ -120,75 +122,98 @@ downloadButtonElement.addEventListener('click', async () => {
   { element: potButtonElement, image: potImage },
 ].forEach(({ element, image }) => {
   element.addEventListener('click', async () => {
-    if (selectedSprite) {
-      selectedSprite.alpha = 1
+    if (selectedObject) {
+      selectedObject.alpha = 1
     }
 
     const texture = await Assets.load(image)
     const { sprite } = addSprite(app, texture)
-    const extraX = Math.random() * 100 - 50
-    const extraY = Math.random() * 100 - 50
-    sprite.x = app.screen.width / 2 + extraX
-    sprite.y = app.screen.height / 2 + extraY
-    sprite.alpha = 0.5
+
     sprite.on('pointerdown', () => onDragStart(sprite))
-    selectedSprite = sprite
+    selectedObject = sprite
     shareButtonElement.disabled = false
     downloadButtonElement.disabled = false
   })
 })
 
 upwardButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
-    selectedSprite.y -= 10
+  if (selectedObject) {
+    selectedObject.y -= 10
   }
 })
 
 downwardButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
-    selectedSprite.y += 10
+  if (selectedObject) {
+    selectedObject.y += 10
   }
 })
 
 leftButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
-    selectedSprite.x -= 10
+  if (selectedObject) {
+    selectedObject.x -= 10
   }
 })
 
 rightButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
-    selectedSprite.x += 10
+  if (selectedObject) {
+    selectedObject.x += 10
   }
 })
 
 zoomInButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
-    selectedSprite.scale.x *= 1.1
-    selectedSprite.scale.y *= 1.1
+  if (!selectedObject) {
+    return
+  }
+
+  if (selectedObject instanceof Text) {
+    selectedObject.style.fontSize = Number(selectedObject.style.fontSize) * 1.1
+  } else if (selectedObject instanceof Sprite) {
+    selectedObject.scale.x *= 1.1
+    selectedObject.scale.y *= 1.1
   }
 })
 
 zoomOutButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
-    selectedSprite.scale.x /= 1.1
-    selectedSprite.scale.y /= 1.1
+  if (!selectedObject) {
+    return
+  }
+
+  if (selectedObject instanceof Text) {
+    selectedObject.style.fontSize = Number(selectedObject.style.fontSize) / 1.1
+  } else if (selectedObject instanceof Sprite) {
+    selectedObject.scale.x /= 1.1
+    selectedObject.scale.y /= 1.1
   }
 })
 
 rotateButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
-    selectedSprite.rotation += Math.PI / 10
+  if (selectedObject) {
+    selectedObject.rotation += Math.PI / 10
   }
 })
 
 deleteButtonElement.addEventListener('click', () => {
-  if (selectedSprite) {
+  if (selectedObject) {
     if (app.stage.children.length <= 1) {
       shareButtonElement.disabled = true
       downloadButtonElement.disabled = true
     }
-    selectedSprite.destroySprite?.()
-    selectedSprite = null
+    selectedObject.destroyObject?.()
+    selectedObject = null
   }
+})
+
+formElement.addEventListener('submit', (event) => {
+  event.preventDefault()
+  const value = textFieldElement.value
+  if (!value) {
+    return
+  }
+
+  const { textObject } = addText(app, value)
+
+  textObject.on('pointerdown', () => onDragStart(textObject))
+  selectedObject = textObject
+  shareButtonElement.disabled = false
+  downloadButtonElement.disabled = false
 })
