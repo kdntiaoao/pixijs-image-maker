@@ -214,6 +214,8 @@ formElement.addEventListener('submit', (event) => {
 
   textObject.on('pointerdown', () => onDragStart(textObject))
   selectedObject = textObject
+
+  textFieldElement.value = ''
   shareButtonElement.disabled = false
   downloadButtonElement.disabled = false
 })
