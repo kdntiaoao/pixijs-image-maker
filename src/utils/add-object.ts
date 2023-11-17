@@ -30,13 +30,12 @@ export const addSprite = (app: Application, texture: Texture): { sprite: Sprite 
   const sprite = new Sprite(texture)
   const spriteAspectRatio = sprite.width / sprite.height
 
+  addObject(app, sprite)
+
   sprite.width = app.screen.width / 8
   sprite.height = sprite.width / spriteAspectRatio
-
   sprite.anchor.x = 0.5
   sprite.anchor.y = 0.5
-
-  addObject(app, sprite)
 
   console.log('Added sprite')
 
@@ -51,12 +50,33 @@ export const addText = (app: Application, text: string): { textObject: CustomObj
     align: 'center',
   })
 
+  addObject(app, textObject)
+
   textObject.anchor.x = 0.5
   textObject.anchor.y = 0.5
-
-  addObject(app, textObject)
 
   console.log('Added text')
 
   return { textObject }
+}
+
+export const addBackground = (app: Application, texture: Texture): { bgObject: Sprite } => {
+  const appWidth = app.screen.width
+  const appHeight = app.screen.height
+  const bgObject = new Sprite(texture)
+  const backgroundAspectRatio = bgObject.width / bgObject.height
+
+  bgObject.width = Math.max(appWidth, appHeight * backgroundAspectRatio)
+  bgObject.height = bgObject.width / backgroundAspectRatio
+  bgObject.x = appWidth / 2
+  bgObject.y = appHeight / 2
+  bgObject.anchor.x = 0.5
+  bgObject.anchor.y = 0.5
+  bgObject.zIndex = -1
+
+  app.stage.addChild(bgObject)
+
+  console.log('Added background')
+
+  return { bgObject }
 }

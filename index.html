@@ -73,7 +73,7 @@
         </button>
       </div>
 
-      <form data-form class="form">
+      <form data-form="add-text" class="form">
         <input
           type="text"
           name="text"
@@ -83,6 +83,21 @@
         />
         <button type="submit" class="primary-button">テキストを追加</button>
       </form>
+
+      <div class="select-bg">
+        <label class="select-bg-label">
+          <img src="./src/assets/images/bg01.jpg" alt="village" loading="lazy" class="select-bg-img" />
+          <input type="radio" name="bg-image" value="bg01" data-radio="select-bg" checked class="sr-only" />
+        </label>
+        <label class="select-bg-label">
+          <img src="./src/assets/images/bg02.jpg" alt="forest" loading="lazy" class="select-bg-img" />
+          <input type="radio" name="bg-image" value="bg02" data-radio="select-bg" class="sr-only" />
+        </label>
+        <label class="select-bg-label">
+          <img src="./src/assets/images/bg03.jpg" alt="town" loading="lazy" class="select-bg-img" />
+          <input type="radio" name="bg-image" value="bg03" data-radio="select-bg" class="sr-only" />
+        </label>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

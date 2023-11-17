@@ -1,4 +1,4 @@
-export { type CustomObject, addSprite, addText } from './add-object'
+export { type CustomObject, addSprite, addText, addBackground } from './add-object'
 export { download } from './download'
 export { getXShareUrl } from './get-x-share-url'
 export { share } from './share'

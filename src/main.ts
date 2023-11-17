@@ -1,6 +1,6 @@
 import { Application, Assets, FederatedPointerEvent, Sprite, Text } from 'pixi.js'
 
-import { type CustomObject, addSprite, download, share, sleep, addText } from './utils'
+import { type CustomObject, addSprite, download, share, sleep, addText, addBackground } from './utils'
 
 import cupImage from '@/assets/images/cup.png'
 import dogImage from '@/assets/images/dog.png'
@@ -8,8 +8,17 @@ import cherryBlossomImage from '@/assets/images/cherry-blossom.png'
 import doveImage from '@/assets/images/dove.png'
 import kettleImage from '@/assets/images/kettle.png'
 import potImage from '@/assets/images/pot.png'
+import bg01Image from '@/assets/images/bg01.jpg'
+import bg02Image from '@/assets/images/bg02.jpg'
+import bg03Image from '@/assets/images/bg03.jpg'
 
 import './style.css'
+
+const BG_IMAGES = {
+  bg01: bg01Image,
+  bg02: bg02Image,
+  bg03: bg03Image,
+}
 
 const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
 const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
@@ -29,11 +38,13 @@ const zoomInButtonElement = document.querySelector('[data-button="zoom-in"]') as
 const zoomOutButtonElement = document.querySelector('[data-button="zoom-out"]') as HTMLButtonElement
 const rotateButtonElement = document.querySelector('[data-button="rotate"]') as HTMLButtonElement
 const deleteButtonElement = document.querySelector('[data-button="delete"]') as HTMLButtonElement
-const formElement = document.querySelector('[data-form]') as HTMLFormElement
+const addTextFormElement = document.querySelector('[data-form="add-text"]') as HTMLFormElement
 const textFieldElement = document.querySelector('[data-text-field]') as HTMLInputElement
+const selectBgRadioElements = document.querySelectorAll('[data-radio="select-bg"]') as NodeListOf<HTMLInputElement>
 
 let draggedObject: CustomObject | null = null
 let selectedObject: CustomObject | null = null
+let selectedBg: Sprite | null = null
 
 const canvasWidth = 1200
 const canvasAspectRatio = 1200 / 630
@@ -45,7 +56,7 @@ const app = new Application({
   height: canvasHeight,
   autoDensity: true,
   powerPreference: 'high-performance',
-  backgroundColor: 0x99ccff,
+  backgroundColor: 0xffffff,
   preserveDrawingBuffer: true,
 })
 
@@ -73,6 +84,7 @@ const onDragEnd = () => {
 
 app.stage.eventMode = 'static'
 app.stage.hitArea = app.screen
+app.stage.sortableChildren = true
 app.stage.on('pointerup', onDragEnd)
 app.stage.on('pointerupoutside', onDragEnd)
 
@@ -203,7 +215,7 @@ deleteButtonElement.addEventListener('click', () => {
   }
 })
 
-formElement.addEventListener('submit', (event) => {
+addTextFormElement.addEventListener('submit', (event) => {
   event.preventDefault()
   const value = textFieldElement.value
   if (!value) {
@@ -219,3 +231,38 @@ formElement.addEventListener('submit', (event) => {
   shareButtonElement.disabled = false
   downloadButtonElement.disabled = false
 })
+
+await Promise.all(
+  [...selectBgRadioElements].map(async (element, i) => {
+    if (element.checked) {
+      const value = element.value as keyof typeof BG_IMAGES
+
+      if (!value || !BG_IMAGES[value]) {
+        return
+      }
+
+      const texture = await Assets.load(BG_IMAGES[value])
+      const { bgObject } = addBackground(app, texture)
+      selectedBg = bgObject
+    }
+
+    console.log('Added background', i)
+
+    element.addEventListener('change', async function (event) {
+      const target = event.target as HTMLInputElement
+      const value = target.value as keyof typeof BG_IMAGES
+
+      if (!value || !BG_IMAGES[value]) {
+        return
+      }
+
+      if (selectedBg) {
+        selectedBg.destroy()
+      }
+
+      const texture = await Assets.load(BG_IMAGES[value])
+      const { bgObject } = addBackground(app, texture)
+      selectedBg = bgObject
+    })
+  })
+)
