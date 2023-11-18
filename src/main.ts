@@ -253,7 +253,7 @@ addTextFormElement.addEventListener('submit', (event) => {
   textFieldElement.value = ''
 })
 
-await Promise.all(
+Promise.all(
   [...selectBgRadioElements].map(async (element) => {
     if (element.checked) {
       const value = element.value as keyof typeof BG_IMAGES
