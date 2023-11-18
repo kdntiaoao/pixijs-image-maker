@@ -32,8 +32,8 @@ button:hover:not(:disabled) {
 }
 
 .heading {
-  font-size: clamp(24px, 2.5vw, 32px);
-  margin: 8px 0;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  margin: 0.5rem 0;
   letter-spacing: 0.05em;
 }
 
@@ -41,12 +41,12 @@ button:hover:not(:disabled) {
   background-color: #8d83e1;
   color: #fff;
   border: none;
-  padding: 4px 8px;
+  padding: 0.25rem 0.5rem;
 }
 
 .canvas {
   display: block;
-  margin: 20px auto;
+  margin: min(1rem, 2vw) auto;
   max-width: 100%;
   height: auto !important;
   aspect-ratio: 1200 / 630;
@@ -56,8 +56,9 @@ button:hover:not(:disabled) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin: 20px auto;
+  /* gap: 8px; */
+  gap: min(0.8vw, 0.5rem);
+  margin: min(1vw, 1rem) auto;
 }
 
 .icon-button {
@@ -67,7 +68,7 @@ button:hover:not(:disabled) {
 }
 
 .form {
-  margin-top: 40px;
+  margin: min(3vw, 2.5rem) auto;
   text-align: center;
   display: flex;
   justify-content: center;
@@ -88,8 +89,9 @@ button:hover:not(:disabled) {
 .select-bg {
   display: flex;
   gap: 1rem;
-  margin: 40px auto;
+  margin: min(3vw, 2.5rem) auto;
   padding: 1rem;
+  max-width: 800px;
 }
 
 .select-bg-label {
