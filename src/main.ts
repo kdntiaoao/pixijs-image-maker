@@ -64,15 +64,19 @@ const selectObject = (objectContainer?: Container) => {
   selectedObjectContainer = objectContainer
   selectedObjectContainer.zIndex = 1
   cover.width =
-    selectedObjectContainer.children[0] instanceof Sprite || selectedObjectContainer.children[0] instanceof Text
+    selectedObjectContainer.children[0] instanceof Text
+      ? selectedObjectContainer.children[0].width + selectedObjectContainer.children[0].style.padding
+      : selectedObjectContainer.children[0] instanceof Sprite
       ? selectedObjectContainer.children[0].width
       : app.screen.width
   cover.height =
-    selectedObjectContainer.children[0] instanceof Sprite || selectedObjectContainer.children[0] instanceof Text
+    selectedObjectContainer.children[0] instanceof Text
+      ? selectedObjectContainer.children[0].height + selectedObjectContainer.children[0].style.padding
+      : selectedObjectContainer.children[0] instanceof Sprite
       ? selectedObjectContainer.children[0].height
       : app.screen.height
   cover.x = cover.width / -2
-  cover.y = cover.height / -2
+  cover.y = cover.height / -1.7
   selectedObjectContainer.addChild(cover)
   shareButtonElement.disabled = false
   downloadButtonElement.disabled = false
@@ -191,10 +195,11 @@ zoomInButtonElement.addEventListener('click', () => {
 
   if (selectedTextObject && selectedTextObject instanceof Text) {
     selectedTextObject.style.fontSize = parseInt(selectedTextObject.style.fontSize.toString()) * 1.1 + 4
-    cover.width = selectedTextObject.width
-    cover.height = selectedTextObject.height
-    cover.x = selectedTextObject.width / -2
-    cover.y = selectedTextObject.height / -2
+    selectedTextObject.style.padding = selectedTextObject.height / 2
+    cover.width = selectedTextObject.width + selectedTextObject.style.padding
+    cover.height = selectedTextObject.height + selectedTextObject.style.padding
+    cover.x = cover.width / -2
+    cover.y = cover.height / -1.7
   } else {
     selectedObjectContainer.width *= 1.1
     selectedObjectContainer.height *= 1.1
@@ -210,10 +215,11 @@ zoomOutButtonElement.addEventListener('click', () => {
 
   if (selectedTextObject && selectedTextObject instanceof Text) {
     selectedTextObject.style.fontSize = Math.max(parseInt(selectedTextObject.style.fontSize.toString()) / 1.1 - 4, 1)
-    cover.width = selectedTextObject.width
-    cover.height = selectedTextObject.height
-    cover.x = selectedTextObject.width / -2
-    cover.y = selectedTextObject.height / -2
+    selectedTextObject.style.padding = selectedTextObject.height / 2
+    cover.width = selectedTextObject.width + selectedTextObject.style.padding
+    cover.height = selectedTextObject.height + selectedTextObject.style.padding
+    cover.x = cover.width / -2
+    cover.y = cover.height / -1.7
   } else {
     selectedObjectContainer.width /= 1.1
     selectedObjectContainer.height /= 1.1

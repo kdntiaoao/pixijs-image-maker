@@ -39,15 +39,16 @@ export const addSprite = (
 export const addText = (app: Application, objectsContainer: Container, text: string): { textContainer: Container } => {
   const textObject = new Text(text, {
     fontFamily: 'DotGothic16',
-    fontSize: 48,
+    fontSize: 50,
     fill: 0x000000,
     align: 'center',
   })
 
-  const objectContainer = addObject(app, objectsContainer, textObject)
-
   textObject.anchor.x = 0.5
   textObject.anchor.y = 0.5
+  textObject.style.padding = textObject.height / 2
+
+  const objectContainer = addObject(app, objectsContainer, textObject)
 
   return { textContainer: objectContainer }
 }
