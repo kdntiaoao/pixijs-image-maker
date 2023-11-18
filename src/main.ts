@@ -1,6 +1,6 @@
-import { Application, Assets, FederatedPointerEvent, Sprite, Text } from 'pixi.js'
+import { Assets, Container, DisplayObject, FederatedPointerEvent, Sprite, Text } from 'pixi.js'
 
-import { type CustomObject, addSprite, download, share, sleep, addText, addBackground } from './utils'
+import { initApp, addSprite, download, share, sleep, addText, addBackground } from './utils'
 
 import cupImage from '@/assets/images/cup.png'
 import dogImage from '@/assets/images/dog.png'
@@ -42,23 +42,24 @@ const addTextFormElement = document.querySelector('[data-form="add-text"]') as H
 const textFieldElement = document.querySelector('[data-text-field]') as HTMLInputElement
 const selectBgRadioElements = document.querySelectorAll('[data-radio="select-bg"]') as NodeListOf<HTMLInputElement>
 
-let draggedObject: CustomObject | null = null
-let selectedObject: CustomObject | null = null
+let draggedObject: DisplayObject | null = null
+let selectedObject: DisplayObject | null = null
 let selectedBg: Sprite | null = null
 
-const canvasWidth = 1200
-const canvasAspectRatio = 1200 / 630
-const canvasHeight = canvasWidth / canvasAspectRatio
+const { app } = initApp(canvasElement)
 
-const app = new Application({
-  view: canvasElement,
-  width: canvasWidth,
-  height: canvasHeight,
-  autoDensity: true,
-  powerPreference: 'high-performance',
-  backgroundColor: 0xffffff,
-  preserveDrawingBuffer: true,
-})
+const selectObject = (object?: DisplayObject) => {
+  if (selectedObject) {
+    selectedObject.alpha = 1
+  }
+  if (!object) {
+    return
+  }
+  selectedObject = object
+  selectedObject.alpha = 0.5
+  shareButtonElement.disabled = false
+  downloadButtonElement.disabled = false
+}
 
 const onDragMove = (event: FederatedPointerEvent) => {
   if (draggedObject) {
@@ -66,12 +67,9 @@ const onDragMove = (event: FederatedPointerEvent) => {
   }
 }
 
-const onDragStart = (sprite: CustomObject) => {
-  if (selectedObject) {
-    selectedObject.alpha = 1
-  }
-  sprite.alpha = 0.5
-  draggedObject = selectedObject = sprite
+const onDragStart = (object: DisplayObject) => {
+  selectObject(object)
+  draggedObject = object
   app.stage.on('pointermove', onDragMove)
 }
 
@@ -82,18 +80,18 @@ const onDragEnd = () => {
   }
 }
 
-app.stage.eventMode = 'static'
-app.stage.hitArea = app.screen
-app.stage.sortableChildren = true
 app.stage.on('pointerup', onDragEnd)
 app.stage.on('pointerupoutside', onDragEnd)
+
+const objectsContainer = new Container()
+app.stage.addChild(objectsContainer)
 
 shareButtonElement.disabled = true
 downloadButtonElement.disabled = true
 
 shareButtonElement.addEventListener('click', async () => {
   if (selectedObject) {
-    selectedObject.alpha = 1
+    selectObject()
   } else {
     console.log('No selected sprite')
   }
@@ -113,7 +111,7 @@ shareButtonElement.addEventListener('click', async () => {
 
 downloadButtonElement.addEventListener('click', async () => {
   if (selectedObject) {
-    selectedObject.alpha = 1
+    selectObject()
   } else {
     console.log('No selected sprite')
   }
@@ -134,17 +132,11 @@ downloadButtonElement.addEventListener('click', async () => {
   { element: potButtonElement, image: potImage },
 ].forEach(({ element, image }) => {
   element.addEventListener('click', async () => {
-    if (selectedObject) {
-      selectedObject.alpha = 1
-    }
-
     const texture = await Assets.load(image)
-    const { sprite } = addSprite(app, texture)
+    const { sprite } = addSprite(app, objectsContainer, texture)
 
     sprite.on('pointerdown', () => onDragStart(sprite))
-    selectedObject = sprite
-    shareButtonElement.disabled = false
-    downloadButtonElement.disabled = false
+    selectObject(sprite)
   })
 })
 
@@ -206,11 +198,12 @@ rotateButtonElement.addEventListener('click', () => {
 
 deleteButtonElement.addEventListener('click', () => {
   if (selectedObject) {
-    if (app.stage.children.length <= 1) {
+    console.log('Current children before delete:', objectsContainer.children.length)
+    if (objectsContainer.children.length <= 1) {
       shareButtonElement.disabled = true
       downloadButtonElement.disabled = true
     }
-    selectedObject.destroyObject?.()
+    selectedObject.destroy()
     selectedObject = null
   }
 })
@@ -222,18 +215,16 @@ addTextFormElement.addEventListener('submit', (event) => {
     return
   }
 
-  const { textObject } = addText(app, value)
+  const { textObject } = addText(app, objectsContainer, value)
 
   textObject.on('pointerdown', () => onDragStart(textObject))
-  selectedObject = textObject
+  selectObject(textObject)
 
   textFieldElement.value = ''
-  shareButtonElement.disabled = false
-  downloadButtonElement.disabled = false
 })
 
 await Promise.all(
-  [...selectBgRadioElements].map(async (element, i) => {
+  [...selectBgRadioElements].map(async (element) => {
     if (element.checked) {
       const value = element.value as keyof typeof BG_IMAGES
 
@@ -245,8 +236,6 @@ await Promise.all(
       const { bgObject } = addBackground(app, texture)
       selectedBg = bgObject
     }
-
-    console.log('Added background', i)
 
     element.addEventListener('change', async function (event) {
       const target = event.target as HTMLInputElement

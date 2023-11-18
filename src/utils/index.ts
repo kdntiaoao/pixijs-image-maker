@@ -1,5 +1,6 @@
-export { type CustomObject, addSprite, addText, addBackground } from './add-object'
+export { addSprite, addText, addBackground } from './add-object'
 export { download } from './download'
 export { getXShareUrl } from './get-x-share-url'
+export { initApp } from './init-app'
 export { share } from './share'
 export { sleep } from './sleep'

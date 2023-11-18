@@ -1,16 +1,6 @@
-import { Application, DisplayObject, Sprite, Text, Texture } from 'pixi.js'
+import { Application, Container, DisplayObject, Sprite, Text, Texture } from 'pixi.js'
 
-export type CustomObject = DisplayObject & {
-  destroyObject?: () => void
-}
-
-export const addObject = (app: Application, object: CustomObject): void => {
-  const destroy = (): void => {
-    app.stage.removeChild(object)
-    object.destroy()
-    console.log('Destroyed object')
-  }
-
+export const addObject = (app: Application, objectsContainer: Container, object: DisplayObject): void => {
   object.eventMode = 'static'
   object.cursor = 'pointer'
 
@@ -21,28 +11,24 @@ export const addObject = (app: Application, object: CustomObject): void => {
   object.y = app.screen.height / 2 + extraY
   object.alpha = 0.5
 
-  object.destroyObject = destroy
-
-  app.stage.addChild(object)
+  objectsContainer.addChild(object)
 }
 
-export const addSprite = (app: Application, texture: Texture): { sprite: Sprite } => {
+export const addSprite = (app: Application, objectsContainer: Container, texture: Texture): { sprite: Sprite } => {
   const sprite = new Sprite(texture)
   const spriteAspectRatio = sprite.width / sprite.height
 
-  addObject(app, sprite)
+  addObject(app, objectsContainer, sprite)
 
   sprite.width = app.screen.width / 8
   sprite.height = sprite.width / spriteAspectRatio
   sprite.anchor.x = 0.5
   sprite.anchor.y = 0.5
 
-  console.log('Added sprite')
-
   return { sprite }
 }
 
-export const addText = (app: Application, text: string): { textObject: CustomObject } => {
+export const addText = (app: Application, objectsContainer: Container, text: string): { textObject: Text } => {
   const textObject = new Text(text, {
     fontFamily: 'DotGothic16',
     fontSize: 48,
@@ -50,12 +36,10 @@ export const addText = (app: Application, text: string): { textObject: CustomObj
     align: 'center',
   })
 
-  addObject(app, textObject)
+  addObject(app, objectsContainer, textObject)
 
   textObject.anchor.x = 0.5
   textObject.anchor.y = 0.5
-
-  console.log('Added text')
 
   return { textObject }
 }
@@ -75,8 +59,6 @@ export const addBackground = (app: Application, texture: Texture): { bgObject: S
   bgObject.zIndex = -1
 
   app.stage.addChild(bgObject)
-
-  console.log('Added background')
 
   return { bgObject }
 }

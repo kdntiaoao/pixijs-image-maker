@@ -23,7 +23,7 @@ button {
 }
 
 button:disabled {
-  opacity: 0.6;
+  filter: contrast(0.5);
   cursor: not-allowed;
 }
 
@@ -38,7 +38,7 @@ button:hover:not(:disabled) {
 }
 
 .primary-button {
-  background-color: #333;
+  background-color: #8d83e1;
   color: #fff;
   border: none;
   padding: 4px 8px;
