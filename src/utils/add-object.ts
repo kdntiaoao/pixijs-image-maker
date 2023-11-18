@@ -1,34 +1,42 @@
 import { Application, Container, DisplayObject, Sprite, Text, Texture } from 'pixi.js'
 
-export const addObject = (app: Application, objectsContainer: Container, object: DisplayObject): void => {
-  object.eventMode = 'static'
-  object.cursor = 'pointer'
+export const addObject = (app: Application, objectsContainer: Container, object: DisplayObject): Container => {
+  const objectContainer = new Container()
+  objectContainer.sortableChildren = true
+  objectContainer.addChild(object)
+  objectsContainer.addChild(objectContainer)
+
+  objectContainer.eventMode = 'static'
+  objectContainer.cursor = 'pointer'
 
   const extraX = Math.random() * 100 - 50
   const extraY = Math.random() * 100 - 50
 
-  object.x = app.screen.width / 2 + extraX
-  object.y = app.screen.height / 2 + extraY
-  object.alpha = 0.5
+  objectContainer.x = app.screen.width / 2 + extraX
+  objectContainer.y = app.screen.height / 2 + extraY
 
-  objectsContainer.addChild(object)
+  return objectContainer
 }
 
-export const addSprite = (app: Application, objectsContainer: Container, texture: Texture): { sprite: Sprite } => {
+export const addSprite = (
+  app: Application,
+  objectsContainer: Container,
+  texture: Texture
+): { spriteContainer: Container } => {
   const sprite = new Sprite(texture)
   const spriteAspectRatio = sprite.width / sprite.height
 
-  addObject(app, objectsContainer, sprite)
+  const objectContainer = addObject(app, objectsContainer, sprite)
 
   sprite.width = app.screen.width / 8
   sprite.height = sprite.width / spriteAspectRatio
   sprite.anchor.x = 0.5
   sprite.anchor.y = 0.5
 
-  return { sprite }
+  return { spriteContainer: objectContainer }
 }
 
-export const addText = (app: Application, objectsContainer: Container, text: string): { textObject: Text } => {
+export const addText = (app: Application, objectsContainer: Container, text: string): { textContainer: Container } => {
   const textObject = new Text(text, {
     fontFamily: 'DotGothic16',
     fontSize: 48,
@@ -36,12 +44,12 @@ export const addText = (app: Application, objectsContainer: Container, text: str
     align: 'center',
   })
 
-  addObject(app, objectsContainer, textObject)
+  const objectContainer = addObject(app, objectsContainer, textObject)
 
   textObject.anchor.x = 0.5
   textObject.anchor.y = 0.5
 
-  return { textObject }
+  return { textContainer: objectContainer }
 }
 
 export const addBackground = (app: Application, texture: Texture): { bgObject: Sprite } => {
