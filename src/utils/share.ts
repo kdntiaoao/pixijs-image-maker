@@ -9,7 +9,7 @@ export const share = async (canvasElement: HTMLCanvasElement): Promise<void> => 
     dataURL: new Blob([dataURL]).size / 1000 + 'kB',
   })
 
-  const apiEndpoint = 'https://27bfwxzjpj7jyk2hthonyyerru0wryet.lambda-url.ap-northeast-1.on.aws/'
+  const apiEndpoint = 'https://dophim7vmhepy2kipjhxau4s6m0darwe.lambda-url.ap-northeast-1.on.aws/'
 
   const res = await fetch(apiEndpoint, {
     method: 'POST',
