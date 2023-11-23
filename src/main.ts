@@ -14,14 +14,14 @@ import bg03Image from '@/assets/images/bg03.jpg'
 
 import './style.css'
 
-const OBJECT_IMAGES = [
-  { img: dogImage, alt: 'dog' },
-  { img: cherryBlossomImage, alt: 'cherry-blossom' },
-  { img: cupImage, alt: 'cup' },
-  { img: doveImage, alt: 'dove' },
-  { img: kettleImage, alt: 'kettle' },
-  { img: potImage, alt: 'pot' },
-]
+const OBJECT_IMAGES = {
+  img01: { img: dogImage, alt: 'dog' },
+  img02: { img: cherryBlossomImage, alt: 'cherry-blossom' },
+  img03: { img: cupImage, alt: 'cup' },
+  img04: { img: doveImage, alt: 'dove' },
+  img05: { img: kettleImage, alt: 'kettle' },
+  img06: { img: potImage, alt: 'pot' },
+}
 
 const BG_IMAGES = {
   bg01: bg01Image,
@@ -29,9 +29,27 @@ const BG_IMAGES = {
   bg03: bg03Image,
 }
 
+type HistoryObject =
+  | {
+      text: string
+      fontSize: number
+      x: number
+      y: number
+      rotation: number
+    }
+  | {
+      img: keyof typeof OBJECT_IMAGES
+      x: number
+      y: number
+      width: number
+      rotation: number
+    }
+
 const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
 const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
 const downloadButtonElement = document.querySelector('[data-button="download"]') as HTMLButtonElement
+const resetButtonElement = document.querySelector('[data-button="reset"]') as HTMLButtonElement
+const saveButtonElement = document.querySelector('[data-button="save"]') as HTMLButtonElement
 const messageElement = document.querySelector('[data-message]') as HTMLParagraphElement
 const buttonsElement = document.querySelector('[data-buttons]') as HTMLDivElement
 const upwardButtonElement = document.querySelector('[data-button="upward"]') as HTMLButtonElement
@@ -55,6 +73,13 @@ const { app } = initApp(canvasElement)
 
 const cover = new Graphics().beginFill('#fff3').drawRect(0, 0, 1, 1).endFill()
 cover.zIndex = -1
+
+const setButtonsDisabled = (disabled: boolean) => {
+  shareButtonElement.disabled = disabled
+  downloadButtonElement.disabled = disabled
+  resetButtonElement.disabled = disabled
+  saveButtonElement.disabled = disabled
+}
 
 /**
  * オブジェクトを選択し、選択されたオブジェクトのタイプに基づいて必要な操作を行う。
@@ -95,8 +120,7 @@ const selectObject = (objectContainer?: Container) => {
   }
 
   selectedObjectContainer.addChild(cover)
-  shareButtonElement.disabled = false
-  downloadButtonElement.disabled = false
+  setButtonsDisabled(false)
 }
 
 /**
@@ -141,10 +165,9 @@ const objectsContainer = new Container()
 objectsContainer.sortableChildren = true
 app.stage.addChild(objectsContainer)
 
-shareButtonElement.disabled = true
-downloadButtonElement.disabled = true
+setButtonsDisabled(true)
 
-OBJECT_IMAGES.forEach(({ img, alt }) => {
+Object.values(OBJECT_IMAGES).forEach(({ img, alt }) => {
   const buttonElement = document.createElement('button')
   buttonElement.type = 'button'
   buttonElement.classList.add('icon-button')
@@ -193,18 +216,26 @@ zoomInButtonElement.addEventListener('click', () => {
     return
   }
 
-  const selectedTextObject = selectedObjectContainer.children.find((child) => child instanceof Text)
+  const selectedObject = selectedObjectContainer.children.find(
+    (child) => child instanceof Text || child instanceof Sprite
+  )
 
-  if (selectedTextObject && selectedTextObject instanceof Text) {
-    selectedTextObject.style.fontSize = parseInt(selectedTextObject.style.fontSize.toString()) * 1.1 + 4
-    selectedTextObject.style.padding = selectedTextObject.height / 2
-    cover.width = selectedTextObject.width + selectedTextObject.style.padding
-    cover.height = selectedTextObject.height + selectedTextObject.style.padding
+  if (!selectedObject) {
+    return
+  }
+
+  if (selectedObject instanceof Text) {
+    selectedObject.style.fontSize = parseInt(selectedObject.style.fontSize.toString()) * 1.1 + 4
+    selectedObject.style.padding = selectedObject.height / 2
+    cover.width = selectedObject.width + selectedObject.style.padding
+    cover.height = selectedObject.height + selectedObject.style.padding
     cover.x = cover.width / -2
     cover.y = cover.height / -1.7
-  } else {
-    selectedObjectContainer.width *= 1.1
-    selectedObjectContainer.height *= 1.1
+  } else if (selectedObject instanceof Sprite) {
+    selectedObject.width = cover.width = selectedObject.width * 1.1
+    selectedObject.height = cover.height = selectedObject.height * 1.1
+    cover.x = cover.width / -2
+    cover.y = cover.height / -2
   }
 })
 
@@ -213,18 +244,26 @@ zoomOutButtonElement.addEventListener('click', () => {
     return
   }
 
-  const selectedTextObject = selectedObjectContainer.children.find((child) => child instanceof Text)
+  const selectedObject = selectedObjectContainer.children.find(
+    (child) => child instanceof Text || child instanceof Sprite
+  )
 
-  if (selectedTextObject && selectedTextObject instanceof Text) {
-    selectedTextObject.style.fontSize = Math.max(parseInt(selectedTextObject.style.fontSize.toString()) / 1.1 - 4, 1)
-    selectedTextObject.style.padding = selectedTextObject.height / 2
-    cover.width = selectedTextObject.width + selectedTextObject.style.padding
-    cover.height = selectedTextObject.height + selectedTextObject.style.padding
+  if (!selectedObject) {
+    return
+  }
+
+  if (selectedObject instanceof Text) {
+    selectedObject.style.fontSize = Math.max(parseInt(selectedObject.style.fontSize.toString()) / 1.1 - 4, 1)
+    selectedObject.style.padding = selectedObject.height / 2
+    cover.width = selectedObject.width + selectedObject.style.padding
+    cover.height = selectedObject.height + selectedObject.style.padding
     cover.x = cover.width / -2
     cover.y = cover.height / -1.7
-  } else {
-    selectedObjectContainer.width /= 1.1
-    selectedObjectContainer.height /= 1.1
+  } else if (selectedObject instanceof Sprite) {
+    selectedObject.width = cover.width = selectedObject.width / 1.1
+    selectedObject.height = cover.height = selectedObject.height / 1.1
+    cover.x = cover.width / -2
+    cover.y = cover.height / -2
   }
 })
 
@@ -238,8 +277,7 @@ deleteButtonElement.addEventListener('click', () => {
   if (selectedObjectContainer) {
     console.log('Current children before delete:', objectsContainer.children.length)
     if (objectsContainer.children.length <= 1) {
-      shareButtonElement.disabled = true
-      downloadButtonElement.disabled = true
+      setButtonsDisabled(true)
     }
     selectedObjectContainer.destroy()
     selectedObjectContainer = null
@@ -249,12 +287,12 @@ deleteButtonElement.addEventListener('click', () => {
 addTextFormElement.addEventListener('submit', (event) => {
   event.preventDefault()
   const value = textFieldElement.value
+
   if (!value) {
     return
   }
 
   const { textContainer } = addText(app, objectsContainer, value)
-
   textContainer.on('pointerdown', (event) => onDragStart(event, textContainer))
   selectObject(textContainer)
 
@@ -292,6 +330,57 @@ downloadButtonElement.addEventListener('click', async () => {
   download(canvasElement)
 })
 
+resetButtonElement.addEventListener('click', () => {
+  objectsContainer.removeChildren()
+  setButtonsDisabled(true)
+})
+
+saveButtonElement.addEventListener('click', async () => {
+  if (selectedObjectContainer) {
+    // 選択を外す
+    selectObject()
+  }
+
+  // 選択されていたSpriteから選択を外すのを待つ
+  await sleep(100)
+
+  window.localStorage.setItem(
+    'history',
+    JSON.stringify(
+      objectsContainer.children
+        .map((container) => {
+          const child = container.children?.[0]
+          if (!child) {
+            console.log('No child')
+            return
+          }
+          if (child instanceof Text) {
+            return {
+              text: child.text,
+              fontSize: child.style.fontSize,
+              x: container.x,
+              y: container.y,
+              rotation: container.rotation,
+            }
+          }
+          if (child instanceof Sprite) {
+            const imgKey = Object.entries(OBJECT_IMAGES).find(
+              ([, imgData]) => imgData.img === child.texture.textureCacheIds[0]
+            )?.[0]
+            return {
+              img: imgKey,
+              x: container.x,
+              y: container.y,
+              width: child.width,
+              rotation: container.rotation,
+            }
+          }
+        })
+        .filter((x) => x)
+    )
+  )
+})
+
 Promise.all(
   [...selectBgRadioElements].map(async (element) => {
     if (element.checked) {
@@ -324,3 +413,33 @@ Promise.all(
     })
   })
 )
+
+const historyObjects: HistoryObject[] = JSON.parse(window.localStorage.getItem('history') || '[]')(async function () {
+  for await (const historyObject of historyObjects) {
+    if ('text' in historyObject) {
+      const { textContainer } = addText(app, objectsContainer, historyObject.text)
+      const textObject = textContainer.children[0]
+      if (textObject instanceof Text) {
+        textObject.style.fontSize = historyObject.fontSize
+        textObject.style.padding = textObject.height / 2
+      }
+      textContainer.x = historyObject.x
+      textContainer.y = historyObject.y
+      textContainer.rotation = historyObject.rotation
+      textContainer.on('pointerdown', (event) => onDragStart(event, textContainer))
+    } else if ('img' in historyObject) {
+      const texture = await Assets.load(OBJECT_IMAGES[historyObject.img].img)
+      const { spriteContainer } = addSprite(app, objectsContainer, texture)
+      const spriteObject = spriteContainer.children[0]
+      if (spriteObject instanceof Sprite) {
+        const spriteAspectRatio = spriteObject.width / spriteObject.height
+        spriteObject.width = historyObject.width
+        spriteObject.height = historyObject.width / spriteAspectRatio
+      }
+      spriteContainer.x = historyObject.x
+      spriteContainer.y = historyObject.y
+      spriteContainer.rotation = historyObject.rotation
+      spriteContainer.on('pointerdown', (event) => onDragStart(event, spriteContainer))
+    }
+  }
+})()
