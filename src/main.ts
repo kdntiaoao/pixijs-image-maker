@@ -43,13 +43,13 @@ const textFieldElement = document.querySelector('[data-text-field]') as HTMLInpu
 const selectBgRadioElements = document.querySelectorAll('[data-radio="select-bg"]') as NodeListOf<HTMLInputElement>
 
 let draggedObject: Container | null = null
+let draggedDiff: { x: number; y: number } = { x: 0, y: 0 }
 let selectedObjectContainer: Container | null = null
 let selectedBg: Sprite | null = null
 
 const { app } = initApp(canvasElement)
 
-const cover = new Graphics().beginFill('#000').drawRect(0, 0, 1, 1).endFill()
-cover.alpha = 0.2
+const cover = new Graphics().beginFill('#fff3').drawRect(0, 0, 1, 1).endFill()
 cover.zIndex = -1
 
 const selectObject = (objectContainer?: Container) => {
@@ -58,25 +58,34 @@ const selectObject = (objectContainer?: Container) => {
     selectedObjectContainer.zIndex = 0
     selectedObjectContainer = null
   }
+
   if (!objectContainer) {
     return
   }
+
   selectedObjectContainer = objectContainer
   selectedObjectContainer.zIndex = 1
-  cover.width =
-    selectedObjectContainer.children[0] instanceof Text
-      ? selectedObjectContainer.children[0].width + selectedObjectContainer.children[0].style.padding
-      : selectedObjectContainer.children[0] instanceof Sprite
-      ? selectedObjectContainer.children[0].width
-      : app.screen.width
-  cover.height =
-    selectedObjectContainer.children[0] instanceof Text
-      ? selectedObjectContainer.children[0].height + selectedObjectContainer.children[0].style.padding
-      : selectedObjectContainer.children[0] instanceof Sprite
-      ? selectedObjectContainer.children[0].height
-      : app.screen.height
-  cover.x = cover.width / -2
-  cover.y = cover.height / -1.7
+
+  if (selectedObjectContainer.children[0] instanceof Text) {
+    cover.width = selectedObjectContainer.children[0].width + selectedObjectContainer.children[0].style.padding
+    cover.height = selectedObjectContainer.children[0].height + selectedObjectContainer.children[0].style.padding
+    cover.x = cover.width / -2
+    cover.y = cover.height / -1.7
+    console.log('Text:', { width: cover.width, height: cover.height })
+  } else if (selectedObjectContainer.children[0] instanceof Sprite) {
+    cover.width = selectedObjectContainer.children[0].width
+    cover.height = selectedObjectContainer.children[0].height
+    cover.x = cover.width / -2
+    cover.y = cover.height / -2
+    console.log('Sprite:', { width: cover.width, height: cover.height })
+  } else {
+    cover.width = app.screen.width
+    cover.height = app.screen.height
+    cover.x = cover.width / -2
+    cover.y = cover.height / -2
+    console.log('Other:', { width: cover.width, height: cover.height })
+  }
+
   selectedObjectContainer.addChild(cover)
   shareButtonElement.disabled = false
   downloadButtonElement.disabled = false
@@ -84,23 +93,27 @@ const selectObject = (objectContainer?: Container) => {
 
 const onDragMove = (event: FederatedPointerEvent) => {
   if (draggedObject) {
-    draggedObject.parent.toLocal(event.global, undefined, draggedObject.position)
+    const position = event.global.clone()
+    position.x -= draggedDiff.x
+    position.y -= draggedDiff.y
+    draggedObject.parent.toLocal(position, undefined, draggedObject.position)
   }
 }
 
-const onDragStart = (object: Container) => {
+const onDragStart = (event: FederatedPointerEvent, object: Container) => {
+  event.stopPropagation()
   selectObject(object)
   draggedObject = object
+  draggedDiff = { x: event.global.x - object.x, y: event.global.y - object.y }
   app.stage.on('pointermove', onDragMove)
 }
 
 const onDragEnd = () => {
-  if (draggedObject) {
-    app.stage.off('pointermove', onDragMove)
-    draggedObject = null
-  }
+  app.stage.off('pointermove', onDragMove)
+  draggedObject = null
 }
 
+app.stage.on('pointerdown', () => selectObject())
 app.stage.on('pointerup', onDragEnd)
 app.stage.on('pointerupoutside', onDragEnd)
 
@@ -113,9 +126,8 @@ downloadButtonElement.disabled = true
 
 shareButtonElement.addEventListener('click', async () => {
   if (selectedObjectContainer) {
+    // 選択を外す
     selectObject()
-  } else {
-    console.log('No selected sprite')
   }
 
   messageElement.textContent = '画像を生成しています...'
@@ -133,9 +145,8 @@ shareButtonElement.addEventListener('click', async () => {
 
 downloadButtonElement.addEventListener('click', async () => {
   if (selectedObjectContainer) {
+    // 選択を外す
     selectObject()
-  } else {
-    console.log('No selected sprite')
   }
 
   // 選択されていたSpriteから選択を外すのを待つ
@@ -157,7 +168,7 @@ downloadButtonElement.addEventListener('click', async () => {
     const texture = await Assets.load(image)
     const { spriteContainer } = addSprite(app, objectsContainer, texture)
 
-    spriteContainer.on('pointerdown', () => onDragStart(spriteContainer))
+    spriteContainer.on('pointerdown', (event) => onDragStart(event, spriteContainer))
     selectObject(spriteContainer)
   })
 })
@@ -253,7 +264,7 @@ addTextFormElement.addEventListener('submit', (event) => {
 
   const { textContainer } = addText(app, objectsContainer, value)
 
-  textContainer.on('pointerdown', () => onDragStart(textContainer))
+  textContainer.on('pointerdown', (event) => onDragStart(event, textContainer))
   selectObject(textContainer)
 
   textFieldElement.value = ''

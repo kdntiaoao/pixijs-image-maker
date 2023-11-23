@@ -4,7 +4,7 @@ export const share = async (canvasElement: HTMLCanvasElement): Promise<void> => 
   const originalDataURL = canvasElement.toDataURL()
   const dataURL = canvasElement.toDataURL('image/jpeg', 0.5)
 
-  console.log({
+  console.log('X Share:', {
     originalDataURL: new Blob([originalDataURL]).size / 1000 + 'kB',
     dataURL: new Blob([dataURL]).size / 1000 + 'kB',
   })
@@ -21,7 +21,7 @@ export const share = async (canvasElement: HTMLCanvasElement): Promise<void> => 
   }
 
   const json = (await res.json()) as { message: string; image?: string; link?: string }
-  console.log('response:', json)
+  console.log('Response:', json)
 
   if (json.link) {
     const text = ['PixiJSで作った画像をXでシェアする', '', json.link]
