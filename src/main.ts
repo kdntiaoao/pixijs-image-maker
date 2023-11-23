@@ -2,9 +2,9 @@ import { Assets, Container, FederatedPointerEvent, Graphics, Sprite, Text } from
 
 import { initApp, addSprite, download, share, sleep, addText, addBackground } from './utils'
 
-import cupImage from '@/assets/images/cup.png'
 import dogImage from '@/assets/images/dog.png'
 import cherryBlossomImage from '@/assets/images/cherry-blossom.png'
+import cupImage from '@/assets/images/cup.png'
 import doveImage from '@/assets/images/dove.png'
 import kettleImage from '@/assets/images/kettle.png'
 import potImage from '@/assets/images/pot.png'
@@ -13,6 +13,15 @@ import bg02Image from '@/assets/images/bg02.jpg'
 import bg03Image from '@/assets/images/bg03.jpg'
 
 import './style.css'
+
+const OBJECT_IMAGES = [
+  { img: dogImage, alt: 'dog' },
+  { img: cherryBlossomImage, alt: 'cherry-blossom' },
+  { img: cupImage, alt: 'cup' },
+  { img: doveImage, alt: 'dove' },
+  { img: kettleImage, alt: 'kettle' },
+  { img: potImage, alt: 'pot' },
+]
 
 const BG_IMAGES = {
   bg01: bg01Image,
@@ -24,12 +33,7 @@ const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
 const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
 const downloadButtonElement = document.querySelector('[data-button="download"]') as HTMLButtonElement
 const messageElement = document.querySelector('[data-message]') as HTMLParagraphElement
-const dogButtonElement = document.querySelector('[data-button="dog"]') as HTMLButtonElement
-const cherryBlossomButtonElement = document.querySelector('[data-button="cherry-blossom"]') as HTMLButtonElement
-const cupButtonElement = document.querySelector('[data-button="cup"]') as HTMLButtonElement
-const doveButtonElement = document.querySelector('[data-button="dove"]') as HTMLButtonElement
-const kettleButtonElement = document.querySelector('[data-button="kettle"]') as HTMLButtonElement
-const potButtonElement = document.querySelector('[data-button="pot"]') as HTMLButtonElement
+const buttonsElement = document.querySelector('[data-buttons]') as HTMLDivElement
 const upwardButtonElement = document.querySelector('[data-button="upward"]') as HTMLButtonElement
 const downwardButtonElement = document.querySelector('[data-button="downward"]') as HTMLButtonElement
 const leftButtonElement = document.querySelector('[data-button="left"]') as HTMLButtonElement
@@ -52,6 +56,10 @@ const { app } = initApp(canvasElement)
 const cover = new Graphics().beginFill('#fff3').drawRect(0, 0, 1, 1).endFill()
 cover.zIndex = -1
 
+/**
+ * オブジェクトを選択し、選択されたオブジェクトのタイプに基づいて必要な操作を行う。
+ * @param {Container} objectContainer - 選択されたオブジェクトのコンテナ
+ */
 const selectObject = (objectContainer?: Container) => {
   if (selectedObjectContainer) {
     selectedObjectContainer.removeChild(cover)
@@ -91,6 +99,10 @@ const selectObject = (objectContainer?: Container) => {
   downloadButtonElement.disabled = false
 }
 
+/**
+ * ドラッグ移動イベントを処理する。
+ * @param {FederatedPointerEvent} event - フェデレーションポインターイベント
+ */
 const onDragMove = (event: FederatedPointerEvent) => {
   if (draggedObject) {
     const position = event.global.clone()
@@ -100,6 +112,11 @@ const onDragMove = (event: FederatedPointerEvent) => {
   }
 }
 
+/**
+ * オブジェクトのドラッグ開始イベントを処理する。
+ * @param {FederatedPointerEvent} event - ドラッグ開始イベント
+ * @param {Container} object - ドラッグするオブジェクト
+ */
 const onDragStart = (event: FederatedPointerEvent, object: Container) => {
   event.stopPropagation()
   selectObject(object)
@@ -108,6 +125,9 @@ const onDragStart = (event: FederatedPointerEvent, object: Container) => {
   app.stage.on('pointermove', onDragMove)
 }
 
+/**
+ * ドラッグ操作が終了したときに呼び出されるコールバック関数。
+ */
 const onDragEnd = () => {
   app.stage.off('pointermove', onDragMove)
   draggedObject = null
@@ -124,53 +144,24 @@ app.stage.addChild(objectsContainer)
 shareButtonElement.disabled = true
 downloadButtonElement.disabled = true
 
-shareButtonElement.addEventListener('click', async () => {
-  if (selectedObjectContainer) {
-    // 選択を外す
-    selectObject()
-  }
+OBJECT_IMAGES.forEach(({ img, alt }) => {
+  const buttonElement = document.createElement('button')
+  buttonElement.type = 'button'
+  buttonElement.classList.add('icon-button')
 
-  messageElement.textContent = '画像を生成しています...'
+  const imgElement = document.createElement('img')
+  imgElement.src = img
+  imgElement.alt = alt
 
-  // 選択されていたSpriteから選択を外すのを待つ
-  await sleep(100)
-
-  try {
-    await share(canvasElement)
-    messageElement.textContent = '画像を生成しました！'
-  } catch (error) {
-    messageElement.textContent = '画像の生成に失敗しました'
-  }
-})
-
-downloadButtonElement.addEventListener('click', async () => {
-  if (selectedObjectContainer) {
-    // 選択を外す
-    selectObject()
-  }
-
-  // 選択されていたSpriteから選択を外すのを待つ
-  await sleep(100)
-
-  download(canvasElement)
-})
-
-//
-;[
-  { element: dogButtonElement, image: dogImage },
-  { element: cherryBlossomButtonElement, image: cherryBlossomImage },
-  { element: cupButtonElement, image: cupImage },
-  { element: doveButtonElement, image: doveImage },
-  { element: kettleButtonElement, image: kettleImage },
-  { element: potButtonElement, image: potImage },
-].forEach(({ element, image }) => {
-  element.addEventListener('click', async () => {
-    const texture = await Assets.load(image)
+  buttonElement.append(imgElement)
+  buttonElement.addEventListener('click', async () => {
+    const texture = await Assets.load(img)
     const { spriteContainer } = addSprite(app, objectsContainer, texture)
-
     spriteContainer.on('pointerdown', (event) => onDragStart(event, spriteContainer))
     selectObject(spriteContainer)
   })
+
+  buttonsElement.append(buttonElement)
 })
 
 upwardButtonElement.addEventListener('click', () => {
@@ -268,6 +259,37 @@ addTextFormElement.addEventListener('submit', (event) => {
   selectObject(textContainer)
 
   textFieldElement.value = ''
+})
+
+shareButtonElement.addEventListener('click', async () => {
+  if (selectedObjectContainer) {
+    // 選択を外す
+    selectObject()
+  }
+
+  messageElement.textContent = '画像を生成しています...'
+
+  // 選択されていたSpriteから選択を外すのを待つ
+  await sleep(100)
+
+  try {
+    await share(canvasElement)
+    messageElement.textContent = '画像を生成しました！'
+  } catch (error) {
+    messageElement.textContent = '画像の生成に失敗しました'
+  }
+})
+
+downloadButtonElement.addEventListener('click', async () => {
+  if (selectedObjectContainer) {
+    // 選択を外す
+    selectObject()
+  }
+
+  // 選択されていたSpriteから選択を外すのを待つ
+  await sleep(100)
+
+  download(canvasElement)
 })
 
 Promise.all(

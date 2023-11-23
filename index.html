@@ -16,8 +16,8 @@
     </header>
     <main>
       <div class="button-list">
-        <button type="button" data-button="share" class="primary-button">Xでシェアする</button>
-        <button type="button" data-button="download" class="primary-button">ダウンロード</button>
+        <button type="button" data-button="share" class="primary-button">Share with X</button>
+        <button type="button" data-button="download" class="primary-button">Download</button>
       </div>
 
       <p data-message class="message"></p>
@@ -26,26 +26,8 @@
         <canvas id="canvas" class="canvas"></canvas>
       </div>
 
-      <div class="icon-button-list">
-        <button type="button" data-button="dog" class="icon-button">
-          <img src="./src/assets/images/dog.png" alt="dog" loading="lazy" />
-        </button>
-        <button type="button" data-button="cherry-blossom" class="icon-button">
-          <img src="./src/assets/images/cherry-blossom.png" alt="cherry-blossom" loading="lazy" />
-        </button>
-        <button type="button" data-button="cup" class="icon-button">
-          <img src="./src/assets/images/cup.png" alt="cup" loading="lazy" />
-        </button>
-        <button type="button" data-button="dove" class="icon-button">
-          <img src="./src/assets/images/dove.png" alt="dove" loading="lazy" />
-        </button>
-        <button type="button" data-button="kettle" class="icon-button">
-          <img src="./src/assets/images/kettle.png" alt="kettle" loading="lazy" />
-        </button>
-        <button type="button" data-button="pot" class="icon-button">
-          <img src="./src/assets/images/pot.png" alt="pot" loading="lazy" />
-        </button>
-      </div>
+      <div data-buttons class="icon-button-list"></div>
+
       <div class="icon-button-list">
         <button type="button" data-button="left" class="icon-button">
           <img src="./src/assets/images/arrow-left.png" alt="left" loading="lazy" />
@@ -81,7 +63,7 @@
           data-text-field
           class="text-field"
         />
-        <button type="submit" class="primary-button">追加</button>
+        <button type="submit" class="primary-button">Add</button>
       </form>
 
       <div class="select-bg">
