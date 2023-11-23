@@ -414,7 +414,8 @@ Promise.all(
   })
 )
 
-const historyObjects: HistoryObject[] = JSON.parse(window.localStorage.getItem('history') || '[]')(async function () {
+const historyObjects: HistoryObject[] = JSON.parse(window.localStorage.getItem('history') || '[]')
+;(async function () {
   for await (const historyObject of historyObjects) {
     if ('text' in historyObject) {
       const { textContainer } = addText(app, objectsContainer, historyObject.text)
