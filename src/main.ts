@@ -443,4 +443,7 @@ const historyObjects: HistoryObject[] = JSON.parse(window.localStorage.getItem('
       spriteContainer.on('pointerdown', (event) => onDragStart(event, spriteContainer))
     }
   }
+  if (objectsContainer.children.length > 0) {
+    setButtonsDisabled(false)
+  }
 })()
