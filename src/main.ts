@@ -382,12 +382,11 @@ Promise.all(
   const charLength = loadingCharElements.length
   const duration = (charLength + 1) / 5
   loadingCharElements.forEach((charElement, i) => {
-    // `<span class="loading-char" style="--duration: ${duration}s; --delay: ${i / 5}s">${char}</span>`
     charElement.style.setProperty('--duration', `${duration}s`)
     charElement.style.setProperty('--delay', `${i / 5}s`)
   })
 }
 
 window.addEventListener('load', () => {
-  // loadingElement.style.display = 'none'
+  loadingElement.style.display = 'none'
 })
