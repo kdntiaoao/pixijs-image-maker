@@ -36,6 +36,8 @@ const deleteButtonElement = document.querySelector('[data-button="delete"]') as 
 const addTextFormElement = document.querySelector('[data-form="add-text"]') as HTMLFormElement
 const textFieldElement = document.querySelector('[data-text-field]') as HTMLInputElement
 const selectBgRadioElements = document.querySelectorAll('[data-radio="select-bg"]') as NodeListOf<HTMLInputElement>
+const loadingElement = document.querySelector('[data-loading]') as HTMLDivElement
+const loadingTextElement = document.querySelector('[data-loading-text]') as HTMLParagraphElement
 
 let selectedObjectContainer: Container | null = null
 let selectedBg: Sprite | null = null
@@ -374,3 +376,18 @@ Promise.all(
     }
   }
 })()
+
+// ローディングテキストをアニメーションさせる
+const loadingText = loadingTextElement.textContent
+
+if (loadingText) {
+  const duration = (loadingText.length + 1) / 5
+  loadingTextElement.innerHTML = loadingText
+    .split('')
+    .map((char, i) => `<span class="loading-char" style="--duration: ${duration}s; --delay: ${i / 5}s">${char}</span>`)
+    .join('')
+}
+
+window.addEventListener('load', () => {
+  loadingElement.style.display = 'none'
+})

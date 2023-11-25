@@ -1,7 +1,9 @@
 body {
   margin: 0.5rem 1rem;
   font-family: 'Helvetica Neue', Helvetica, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Arial, Meiryo, sans-serif;
-  background-color: #efeff7;
+  background-color: var(--bg);
+
+  --bg: #efeff7;
 
   @media screen and (width > 800px) {
     margin: 1rem 2dvb;
@@ -143,6 +145,37 @@ button:disabled {
   @media (width > 800px) {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+.loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: 'DotGothic16', Tofu, sans-serif;
+  font-size: clamp(2rem, 3vw, 3rem);
+  text-align: center;
+  background-color: var(--bg);
+}
+
+@keyframes slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%);
+  }
+
+  9% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.loading-char {
+  display: inline-block;
+  min-width: 0.8em;
+  animation: slide-in var(--duration) var(--delay) linear infinite;
 }
 
 .sr-only {
