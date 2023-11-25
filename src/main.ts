@@ -1,49 +1,20 @@
 import { Assets, Container, FederatedPointerEvent, Graphics, Sprite, Text } from 'pixi.js'
 
-import { initApp, addSprite, download, share, sleep, addText, addBackground } from './utils'
-
-import dogImage from '@/assets/images/dog.png'
-import cherryBlossomImage from '@/assets/images/cherry-blossom.png'
-import cupImage from '@/assets/images/cup.png'
-import doveImage from '@/assets/images/dove.png'
-import kettleImage from '@/assets/images/kettle.png'
-import potImage from '@/assets/images/pot.png'
-import bg01Image from '@/assets/images/bg01.jpg'
-import bg02Image from '@/assets/images/bg02.jpg'
-import bg03Image from '@/assets/images/bg03.jpg'
+import { type HistoryObject } from './types'
+import {
+  initApp,
+  addSprite,
+  download,
+  share,
+  sleep,
+  addText,
+  addBackground,
+  convertHistoryObjects,
+  restoreHistoryObjects,
+} from './utils'
+import { BG_IMAGES, OBJECT_IMAGES } from './assets/data'
 
 import './style.css'
-
-const OBJECT_IMAGES = {
-  img01: { img: dogImage, alt: 'dog' },
-  img02: { img: cherryBlossomImage, alt: 'cherry-blossom' },
-  img03: { img: cupImage, alt: 'cup' },
-  img04: { img: doveImage, alt: 'dove' },
-  img05: { img: kettleImage, alt: 'kettle' },
-  img06: { img: potImage, alt: 'pot' },
-}
-
-const BG_IMAGES = {
-  bg01: bg01Image,
-  bg02: bg02Image,
-  bg03: bg03Image,
-}
-
-type HistoryObject =
-  | {
-      text: string
-      fontSize: number
-      x: number
-      y: number
-      rotation: number
-    }
-  | {
-      img: keyof typeof OBJECT_IMAGES
-      x: number
-      y: number
-      width: number
-      rotation: number
-    }
 
 const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
 const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
@@ -139,13 +110,17 @@ const onDragMove = (event: FederatedPointerEvent) => {
 /**
  * オブジェクトのドラッグ開始イベントを処理する。
  * @param {FederatedPointerEvent} event - ドラッグ開始イベント
- * @param {Container} object - ドラッグするオブジェクト
  */
-const onDragStart = (event: FederatedPointerEvent, object: Container) => {
+const onDragStart = (event: FederatedPointerEvent) => {
+  const target = event.target
+  if (!(target instanceof Container)) {
+    console.log('Invalid target')
+    return
+  }
   event.stopPropagation()
-  selectObject(object)
-  draggedObject = object
-  draggedDiff = { x: event.global.x - object.x, y: event.global.y - object.y }
+  selectObject(target)
+  draggedObject = target
+  draggedDiff = { x: event.global.x - target.x, y: event.global.y - target.y }
   app.stage.on('pointermove', onDragMove)
 }
 
@@ -180,7 +155,7 @@ Object.values(OBJECT_IMAGES).forEach(({ img, alt }) => {
   buttonElement.addEventListener('click', async () => {
     const texture = await Assets.load(img)
     const { spriteContainer } = addSprite(app, objectsContainer, texture)
-    spriteContainer.on('pointerdown', (event) => onDragStart(event, spriteContainer))
+    spriteContainer.on('pointerdown', (event) => onDragStart(event))
     selectObject(spriteContainer)
   })
 
@@ -293,7 +268,7 @@ addTextFormElement.addEventListener('submit', (event) => {
   }
 
   const { textContainer } = addText(app, objectsContainer, value)
-  textContainer.on('pointerdown', (event) => onDragStart(event, textContainer))
+  textContainer.on('pointerdown', (event) => onDragStart(event))
   selectObject(textContainer)
 
   textFieldElement.value = ''
@@ -344,41 +319,9 @@ saveButtonElement.addEventListener('click', async () => {
   // 選択されていたSpriteから選択を外すのを待つ
   await sleep(100)
 
-  window.localStorage.setItem(
-    'history',
-    JSON.stringify(
-      objectsContainer.children
-        .map((container) => {
-          const child = container.children?.[0]
-          if (!child) {
-            console.log('No child')
-            return
-          }
-          if (child instanceof Text) {
-            return {
-              text: child.text,
-              fontSize: child.style.fontSize,
-              x: container.x,
-              y: container.y,
-              rotation: container.rotation,
-            }
-          }
-          if (child instanceof Sprite) {
-            const imgKey = Object.entries(OBJECT_IMAGES).find(
-              ([, imgData]) => imgData.img === child.texture.textureCacheIds[0]
-            )?.[0]
-            return {
-              img: imgKey,
-              x: container.x,
-              y: container.y,
-              width: child.width,
-              rotation: container.rotation,
-            }
-          }
-        })
-        .filter((x) => x)
-    )
-  )
+  const historyObjects = convertHistoryObjects(objectsContainer.children)
+
+  window.localStorage.setItem('history', JSON.stringify(historyObjects))
 })
 
 Promise.all(
@@ -414,35 +357,17 @@ Promise.all(
   })
 )
 
-const historyObjects: HistoryObject[] = JSON.parse(window.localStorage.getItem('history') || '[]')
+// 履歴を読み込む
+const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') || '')
 ;(async function () {
-  for await (const historyObject of historyObjects) {
-    if ('text' in historyObject) {
-      const { textContainer } = addText(app, objectsContainer, historyObject.text)
-      const textObject = textContainer.children[0]
-      if (textObject instanceof Text) {
-        textObject.style.fontSize = historyObject.fontSize
-        textObject.style.padding = textObject.height / 2
-      }
-      textContainer.x = historyObject.x
-      textContainer.y = historyObject.y
-      textContainer.rotation = historyObject.rotation
-      textContainer.on('pointerdown', (event) => onDragStart(event, textContainer))
-    } else if ('img' in historyObject) {
-      const texture = await Assets.load(OBJECT_IMAGES[historyObject.img].img)
-      const { spriteContainer } = addSprite(app, objectsContainer, texture)
-      const spriteObject = spriteContainer.children[0]
-      if (spriteObject instanceof Sprite) {
-        const spriteAspectRatio = spriteObject.width / spriteObject.height
-        spriteObject.width = historyObject.width
-        spriteObject.height = historyObject.width / spriteAspectRatio
-      }
-      spriteContainer.x = historyObject.x
-      spriteContainer.y = historyObject.y
-      spriteContainer.rotation = historyObject.rotation
-      spriteContainer.on('pointerdown', (event) => onDragStart(event, spriteContainer))
-    }
-  }
+  if (!Array.isArray(rawHistory)) return
+
+  const historyObjects: HistoryObject[] = rawHistory
+
+  await restoreHistoryObjects(historyObjects, app, objectsContainer, (container) => {
+    container.on('pointerdown', (event) => onDragStart(event))
+  })
+
   if (objectsContainer.children.length > 0) {
     setButtonsDisabled(false)
   }
