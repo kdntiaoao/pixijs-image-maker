@@ -1,6 +1,6 @@
 import { Application, Assets, Container, DisplayObject, Sprite, Text } from 'pixi.js'
 
-import { type HistoryObject } from '../types'
+import { HistoryData } from '../types'
 import { addSprite, addText, strictEntries } from '.'
 import { OBJECT_IMAGES } from '../assets/data'
 
@@ -9,7 +9,7 @@ const roundWithDigits = (dirtyNum: string | number, digits: number = 0): number 
   return Number(num.toFixed(digits))
 }
 
-export const convertHistoryObjects = (objects: DisplayObject[]): HistoryObject[] => {
+export const convertHistoryDataList = (objects: DisplayObject[]): HistoryData[] => {
   return objects
     .map((container) => {
       const child = container.children?.[0]
@@ -18,65 +18,62 @@ export const convertHistoryObjects = (objects: DisplayObject[]): HistoryObject[]
         return
       }
       if (child instanceof Text) {
-        const object: HistoryObject = {
-          text: child.text,
-          fontSize: roundWithDigits(child.style.fontSize, 2),
-          x: roundWithDigits(container.x, 2),
-          y: roundWithDigits(container.y, 2),
-          rotation: roundWithDigits(container.rotation, 3),
-        }
-        return object
+        return [
+          'text',
+          // localStorageに保存するデータ容量を減らすため、小数点以下の桁数を減らす
+          roundWithDigits(container.x, 1),
+          roundWithDigits(container.y, 1),
+          roundWithDigits(container.rotation, 3),
+          child.text,
+          roundWithDigits(child.style.fontSize, 2),
+        ]
       }
       if (child instanceof Sprite) {
         const imgKey = strictEntries(OBJECT_IMAGES).find(
           ([, imgData]) => imgData.img === child.texture.textureCacheIds[0]
         )?.[0]
         if (!imgKey) return
-        const object: HistoryObject = {
-          img: imgKey,
-          x: roundWithDigits(container.x, 2),
-          y: roundWithDigits(container.y, 2),
-          width: roundWithDigits(child.width, 2),
-          rotation: roundWithDigits(container.rotation, 3),
-        }
-        return object
+        return [
+          'img',
+          roundWithDigits(container.x, 1),
+          roundWithDigits(container.y, 1),
+          roundWithDigits(container.rotation, 3),
+          imgKey,
+          roundWithDigits(child.width, 1),
+        ]
       }
       return
     })
-    .filter((x): x is HistoryObject => !!x)
+    .filter((x): x is HistoryData => !!x)
 }
 
-export const restoreHistoryObjects = async (
-  historyObjects: HistoryObject[],
+export const restoreHistoryDataList = async (
+  historyDataList: HistoryData[],
   app: Application,
   objectsContainer: Container,
   additionalInitObject?: (container: Container) => void
 ) => {
-  for await (const historyObject of historyObjects) {
-    if (!('text' in historyObject) && !('img' in historyObject)) {
-      console.log('Invalid history object')
-      continue
-    }
-
+  for await (const historyData of historyDataList) {
     let container: Container | null = null
 
-    if ('text' in historyObject) {
-      container = addText(app, objectsContainer, historyObject.text).textContainer
+    if (historyData[0] === 'text') {
+      container = addText(app, objectsContainer, historyData[4]).textContainer
 
       const textObject = container.children[0]
       if (textObject instanceof Text) {
-        textObject.style.fontSize = historyObject.fontSize
+        textObject.style.fontSize = historyData[5]
         textObject.style.padding = textObject.height / 2
       }
-    } else if ('img' in historyObject) {
-      const texture = await Assets.load(OBJECT_IMAGES[historyObject.img].img)
+    } else if (historyData[0] === 'img') {
+      console.log('historyData[4]', historyData[4])
+      const texture = await Assets.load(OBJECT_IMAGES[historyData[4]].img)
       container = addSprite(app, objectsContainer, texture).spriteContainer
 
       const spriteObject = container.children[0]
       if (spriteObject instanceof Sprite) {
         const spriteAspectRatio = spriteObject.width / spriteObject.height
-        spriteObject.width = historyObject.width
-        spriteObject.height = historyObject.width / spriteAspectRatio
+        spriteObject.width = historyData[5]
+        spriteObject.height = historyData[5] / spriteAspectRatio
       }
     }
 
@@ -85,9 +82,9 @@ export const restoreHistoryObjects = async (
       continue
     }
 
-    container.x = historyObject.x
-    container.y = historyObject.y
-    container.rotation = historyObject.rotation
+    container.x = historyData[1]
+    container.y = historyData[2]
+    container.rotation = historyData[3]
     additionalInitObject?.(container)
   }
 }

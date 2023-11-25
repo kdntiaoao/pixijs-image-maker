@@ -1,6 +1,6 @@
 import { Assets, Container, FederatedPointerEvent, Graphics, Sprite, Text } from 'pixi.js'
 
-import { type HistoryObject } from './types'
+import { type HistoryData } from './types'
 import {
   initApp,
   addSprite,
@@ -9,8 +9,8 @@ import {
   sleep,
   addText,
   addBackground,
-  convertHistoryObjects,
-  restoreHistoryObjects,
+  convertHistoryDataList,
+  restoreHistoryDataList,
   handleDragEnd,
   handleDragStart,
 } from './utils'
@@ -291,9 +291,9 @@ saveButtonElement.addEventListener('click', async () => {
   // 選択されていたSpriteから選択を外すのを待つ
   await sleep(100)
 
-  const historyObjects = convertHistoryObjects(objectsContainer.children)
+  const historyDataList = convertHistoryDataList(objectsContainer.children)
 
-  window.localStorage.setItem('history', JSON.stringify(historyObjects))
+  window.localStorage.setItem('history', JSON.stringify(historyDataList))
 })
 
 Promise.all(
@@ -334,9 +334,9 @@ const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') ||
 ;(async function () {
   if (!Array.isArray(rawHistory)) return
 
-  const historyObjects: HistoryObject[] = rawHistory
+  const historyData: HistoryData[] = rawHistory
 
-  await restoreHistoryObjects(historyObjects, app, objectsContainer, (container) => {
+  await restoreHistoryDataList(historyData, app, objectsContainer, (container) => {
     container.on('pointerdown', onDragStart)
   })
 
