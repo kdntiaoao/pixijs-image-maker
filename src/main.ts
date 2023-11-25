@@ -389,5 +389,5 @@ Promise.all(
 }
 
 window.addEventListener('load', () => {
-  loadingElement.style.display = 'none'
+  // loadingElement.style.display = 'none'
 })

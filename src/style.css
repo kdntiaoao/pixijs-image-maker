@@ -155,7 +155,7 @@ button:disabled {
   width: 100%;
   height: 100%;
   font-family: 'DotGothic16', Tofu, sans-serif;
-  font-size: clamp(2rem, 3vw, 3rem);
+  font-size: clamp(1.5rem, 3vw, 3rem);
   text-align: center;
   background-color: var(--bg);
 }
@@ -174,7 +174,7 @@ button:disabled {
 
 .loading-char {
   display: inline-block;
-  min-width: 0.8em;
+  min-width: 0.6em;
   animation: slide-in var(--duration) var(--delay) linear infinite;
 }
 
