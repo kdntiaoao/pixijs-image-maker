@@ -1,4 +1,4 @@
-import { Assets, Container, FederatedPointerEvent, Graphics, Sprite, Text } from 'pixi.js'
+import { Assets, Container, FederatedPointerEvent, Graphics, Sprite, Text, Texture } from 'pixi.js'
 
 import { type HistoryData } from './types'
 import {
@@ -302,24 +302,15 @@ saveButtonElement.addEventListener('click', async () => {
   const historyDataList = convertHistoryDataList(objectsContainer.children)
   window.localStorage.setItem('history', JSON.stringify(historyDataList))
 
+  const bg = [...selectBgRadioElements].find((element) => element.checked)?.value
+  window.localStorage.setItem('bg', bg || Object.keys(BG_IMAGES)[0])
+
   messageElement.textContent = '保存しました！'
 })
 
 Promise.all(
   [...selectBgRadioElements].map(async (element) => {
-    if (element.checked) {
-      const value = element.value as keyof typeof BG_IMAGES
-
-      if (!value || !BG_IMAGES[value]) {
-        return
-      }
-
-      const texture = await Assets.load(BG_IMAGES[value])
-      const { bgObject } = addBackground(app, texture)
-      selectedBg = bgObject
-    }
-
-    element.addEventListener('change', async function (event) {
+    element.addEventListener('change', async (event) => {
       const target = event.target as HTMLInputElement
       const value = target.value as keyof typeof BG_IMAGES
 
@@ -339,8 +330,8 @@ Promise.all(
 )
 
 // 履歴を読み込む
-const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') || '')
 ;(async function () {
+  const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') || '')
   if (!Array.isArray(rawHistory)) return
 
   const historyData: HistoryData[] = rawHistory
@@ -351,5 +342,35 @@ const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') ||
 
   if (objectsContainer.children.length > 0) {
     setButtonsDisabled(false)
+  }
+})()
+
+//
+;(async function () {
+  const bg = window.localStorage.getItem('bg') || Object.keys(BG_IMAGES)[0]
+  const bgValue = bg ? BG_IMAGES[bg as keyof typeof BG_IMAGES] : undefined
+  let texture: Texture | null = null
+
+  if (!bgValue) {
+    texture = await Assets.load(Object.values(BG_IMAGES)[0])
+  } else {
+    texture = await Assets.load(bgValue)
+  }
+
+  if (!texture) {
+    console.log('Failed to load texture')
+    return
+  }
+
+  const { bgObject } = addBackground(app, texture)
+  selectedBg = bgObject
+
+  for (const element of selectBgRadioElements) {
+    const target = element as HTMLInputElement
+    const value = target.value as keyof typeof BG_IMAGES
+
+    if (value === bg) {
+      target.checked = true
+    }
   }
 })()
