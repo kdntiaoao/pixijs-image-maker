@@ -1,6 +1,6 @@
 import { Application, Assets, Container, DisplayObject, Sprite, Text } from 'pixi.js'
 
-import { HistoryData } from '../types'
+import { HistoryData, HistoryObject } from '../types'
 import { addSprite, addText, strictEntries } from '.'
 import { OBJECT_IMAGES } from '../assets/data'
 
@@ -9,7 +9,7 @@ const roundWithDigits = (dirtyNum: string | number, digits: number = 0): number 
   return Number(num.toFixed(digits))
 }
 
-export const convertHistoryDataList = (objects: DisplayObject[]): HistoryData[] => {
+export const getHistoryObjects = (objects: DisplayObject[]): HistoryObject[] => {
   return objects
     .map((container) => {
       const child = container.children?.[0]
@@ -18,29 +18,48 @@ export const convertHistoryDataList = (objects: DisplayObject[]): HistoryData[] 
         return
       }
       if (child instanceof Text) {
-        return [
-          'text',
-          // localStorageに保存するデータ容量を減らすため、小数点以下の桁数を減らす
-          roundWithDigits(container.x, 1),
-          roundWithDigits(container.y, 1),
-          roundWithDigits(container.rotation, 3),
-          child.text,
-          roundWithDigits(child.style.fontSize, 2),
-        ]
+        return {
+          text: child.text,
+          x: roundWithDigits(container.x, 2),
+          y: roundWithDigits(container.y, 2),
+          rotation: roundWithDigits(container.rotation, 3),
+          fontSize: roundWithDigits(child.style.fontSize, 2),
+        }
       }
       if (child instanceof Sprite) {
         const imgKey = strictEntries(OBJECT_IMAGES).find(
           ([, imgData]) => imgData.img === child.texture.textureCacheIds[0]
         )?.[0]
         if (!imgKey) return
+        return {
+          img: imgKey,
+          x: roundWithDigits(container.x, 2),
+          y: roundWithDigits(container.y, 2),
+          rotation: roundWithDigits(container.rotation, 3),
+          width: roundWithDigits(child.width, 2),
+        }
+      }
+      return
+    })
+    .filter((x): x is HistoryObject => !!x)
+}
+
+export const convertHistoryDataList = (objects: DisplayObject[]): HistoryData[] => {
+  const historyObjects = getHistoryObjects(objects)
+  return historyObjects
+    .map((historyObject) => {
+      if ('text' in historyObject) {
         return [
-          'img',
-          roundWithDigits(container.x, 1),
-          roundWithDigits(container.y, 1),
-          roundWithDigits(container.rotation, 3),
-          imgKey,
-          roundWithDigits(child.width, 1),
+          'text',
+          historyObject.x,
+          historyObject.y,
+          historyObject.rotation,
+          historyObject.text,
+          historyObject.fontSize,
         ]
+      }
+      if ('img' in historyObject) {
+        return ['img', historyObject.x, historyObject.y, historyObject.rotation, historyObject.img, historyObject.width]
       }
       return
     })

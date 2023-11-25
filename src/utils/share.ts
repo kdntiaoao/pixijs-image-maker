@@ -1,12 +1,10 @@
 import { getXShareUrl } from './get-x-share-url'
 
 export const share = async (canvasElement: HTMLCanvasElement): Promise<void> => {
-  const originalDataURL = canvasElement.toDataURL()
   const dataURL = canvasElement.toDataURL('image/jpeg', 0.5)
 
   console.log('X Share:', {
-    originalDataURL: new Blob([originalDataURL]).size / 1000 + 'kB',
-    dataURL: new Blob([dataURL]).size / 1000 + 'kB',
+    size: new Blob([dataURL]).size / 1000 + 'kB',
   })
 
   const apiEndpoint = 'https://dophim7vmhepy2kipjhxau4s6m0darwe.lambda-url.ap-northeast-1.on.aws/'

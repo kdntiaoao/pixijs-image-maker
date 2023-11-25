@@ -12,21 +12,18 @@ export type HistoryData =
   | ['text', ObjectX, ObjectY, ObjectRotation, TextValue, TextFontSize]
   | ['img', ObjectX, ObjectY, ObjectRotation, ImgKey, ImgWidth]
 
-/**
- * { text: <text>, fontSize: <fontSize>, x: <x>, y: <y>, rotation: <rotation> }
- */
 export type HistoryObject =
   | {
       text: string
-      fontSize: number
       x: number
       y: number
       rotation: number
+      fontSize: number
     }
   | {
-      img: keyof typeof OBJECT_IMAGES
+      img: ImgKey
       x: number
       y: number
-      width: number
       rotation: number
+      width: number
     }

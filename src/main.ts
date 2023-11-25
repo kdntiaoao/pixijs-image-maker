@@ -281,6 +281,12 @@ resetButtonElement.addEventListener('click', () => {
   objectsContainer.removeChildren()
   setButtonsDisabled(true)
   messageElement.textContent = 'リセットしました！'
+
+  setTimeout(() => {
+    if (messageElement.textContent === 'リセットしました！') {
+      messageElement.textContent = ''
+    }
+  }, 2000)
 })
 
 saveButtonElement.addEventListener('click', async () => {
