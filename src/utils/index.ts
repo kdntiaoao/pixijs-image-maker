@@ -1,5 +1,6 @@
 export { addSprite, addText, addBackground } from './add-object'
 export { download } from './download'
+export { handleDragEnd, handleDragMove, handleDragStart } from './drag-events'
 export { convertHistoryObjects, restoreHistoryObjects } from './history-objects'
 export { getXShareUrl } from './get-x-share-url'
 export { initApp } from './init-app'

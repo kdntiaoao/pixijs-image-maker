@@ -11,6 +11,8 @@ import {
   addBackground,
   convertHistoryObjects,
   restoreHistoryObjects,
+  handleDragEnd,
+  handleDragStart,
 } from './utils'
 import { BG_IMAGES, OBJECT_IMAGES } from './assets/data'
 
@@ -35,8 +37,6 @@ const addTextFormElement = document.querySelector('[data-form="add-text"]') as H
 const textFieldElement = document.querySelector('[data-text-field]') as HTMLInputElement
 const selectBgRadioElements = document.querySelectorAll('[data-radio="select-bg"]') as NodeListOf<HTMLInputElement>
 
-let draggedObject: Container | null = null
-let draggedDiff: { x: number; y: number } = { x: 0, y: 0 }
 let selectedObjectContainer: Container | null = null
 let selectedBg: Sprite | null = null
 
@@ -94,42 +94,14 @@ const selectObject = (objectContainer?: Container) => {
   setButtonsDisabled(false)
 }
 
-/**
- * ドラッグ移動イベントを処理する。
- * @param {FederatedPointerEvent} event - フェデレーションポインターイベント
- */
-const onDragMove = (event: FederatedPointerEvent) => {
-  if (draggedObject) {
-    const position = event.global.clone()
-    position.x -= draggedDiff.x
-    position.y -= draggedDiff.y
-    draggedObject.parent.toLocal(position, undefined, draggedObject.position)
-  }
-}
-
-/**
- * オブジェクトのドラッグ開始イベントを処理する。
- * @param {FederatedPointerEvent} event - ドラッグ開始イベント
- */
 const onDragStart = (event: FederatedPointerEvent) => {
-  const target = event.target
-  if (!(target instanceof Container)) {
-    console.log('Invalid target')
-    return
-  }
-  event.stopPropagation()
-  selectObject(target)
-  draggedObject = target
-  draggedDiff = { x: event.global.x - target.x, y: event.global.y - target.y }
-  app.stage.on('pointermove', onDragMove)
+  handleDragStart(event, app, (target) => {
+    selectObject(target)
+  })
 }
 
-/**
- * ドラッグ操作が終了したときに呼び出されるコールバック関数。
- */
 const onDragEnd = () => {
-  app.stage.off('pointermove', onDragMove)
-  draggedObject = null
+  handleDragEnd(app)
 }
 
 app.stage.on('pointerdown', () => selectObject())
@@ -155,7 +127,7 @@ Object.values(OBJECT_IMAGES).forEach(({ img, alt }) => {
   buttonElement.addEventListener('click', async () => {
     const texture = await Assets.load(img)
     const { spriteContainer } = addSprite(app, objectsContainer, texture)
-    spriteContainer.on('pointerdown', (event) => onDragStart(event))
+    spriteContainer.on('pointerdown', onDragStart)
     selectObject(spriteContainer)
   })
 
@@ -268,7 +240,7 @@ addTextFormElement.addEventListener('submit', (event) => {
   }
 
   const { textContainer } = addText(app, objectsContainer, value)
-  textContainer.on('pointerdown', (event) => onDragStart(event))
+  textContainer.on('pointerdown', onDragStart)
   selectObject(textContainer)
 
   textFieldElement.value = ''
@@ -365,7 +337,7 @@ const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') ||
   const historyObjects: HistoryObject[] = rawHistory
 
   await restoreHistoryObjects(historyObjects, app, objectsContainer, (container) => {
-    container.on('pointerdown', (event) => onDragStart(event))
+    container.on('pointerdown', onDragStart)
   })
 
   if (objectsContainer.children.length > 0) {
