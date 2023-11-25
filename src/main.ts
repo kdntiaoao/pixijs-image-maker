@@ -281,8 +281,10 @@ downloadButtonElement.addEventListener('click', async () => {
 
 resetButtonElement.addEventListener('click', () => {
   objectsContainer.removeChildren()
+
   setButtonsDisabled(true)
   window.localStorage.removeItem('history')
+  window.localStorage.removeItem('bg')
   messageElement.textContent = 'リセットしました！'
 
   setTimeout(() => {
