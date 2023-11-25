@@ -4,6 +4,11 @@ import { type HistoryObject } from '../types'
 import { addSprite, addText, strictEntries } from '.'
 import { OBJECT_IMAGES } from '../assets/data'
 
+const roundWithDigits = (dirtyNum: string | number, digits: number = 0): number => {
+  const num = parseFloat(dirtyNum.toString())
+  return Number(num.toFixed(digits))
+}
+
 export const convertHistoryObjects = (objects: DisplayObject[]): HistoryObject[] => {
   return objects
     .map((container) => {
@@ -13,13 +18,12 @@ export const convertHistoryObjects = (objects: DisplayObject[]): HistoryObject[]
         return
       }
       if (child instanceof Text) {
-        const fontSize = parseInt(child.style.fontSize.toString())
         const object: HistoryObject = {
           text: child.text,
-          fontSize,
-          x: container.x,
-          y: container.y,
-          rotation: container.rotation,
+          fontSize: roundWithDigits(child.style.fontSize, 2),
+          x: roundWithDigits(container.x, 2),
+          y: roundWithDigits(container.y, 2),
+          rotation: roundWithDigits(container.rotation, 3),
         }
         return object
       }
@@ -30,10 +34,10 @@ export const convertHistoryObjects = (objects: DisplayObject[]): HistoryObject[]
         if (!imgKey) return
         const object: HistoryObject = {
           img: imgKey,
-          x: container.x,
-          y: container.y,
-          width: child.width,
-          rotation: container.rotation,
+          x: roundWithDigits(container.x, 2),
+          y: roundWithDigits(container.y, 2),
+          width: roundWithDigits(child.width, 2),
+          rotation: roundWithDigits(container.rotation, 3),
         }
         return object
       }
