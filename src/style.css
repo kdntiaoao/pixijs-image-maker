@@ -1,5 +1,11 @@
 body {
+  margin: 0.5rem 1rem;
   font-family: 'Helvetica Neue', Helvetica, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Arial, Meiryo, sans-serif;
+  background-color: #efeff7;
+
+  @media screen and (width > 800px) {
+    margin: 1rem 2dvb;
+  }
 }
 
 img {
@@ -15,10 +21,9 @@ button {
   margin: 0;
   cursor: pointer;
   background-color: transparent;
-  border: 1px solid #ccc;
+  background-color: #fff;
+  border: 1px solid #5f5b9a;
   border-radius: 4px;
-  box-shadow: 0 0 2px #ccc;
-  transition: box-shadow 0.2s ease-in-out;
 }
 
 button:disabled {
@@ -26,21 +31,11 @@ button:disabled {
   filter: contrast(0.5);
 }
 
-button:hover:not(:disabled) {
-  box-shadow: 0 0 4px #bbb;
-}
-
 .heading {
-  margin: 0.5rem 0;
-  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  margin: min(3vw, 2rem) 0;
+  font-size: clamp(1.2rem, 2.5vw, 2rem);
+  text-align: center;
   letter-spacing: 0.05em;
-}
-
-.primary-button {
-  padding: 0.25rem 0.5rem;
-  color: #fff;
-  background-color: #8d83e1;
-  border: none;
 }
 
 .canvas {
@@ -48,28 +43,43 @@ button:hover:not(:disabled) {
   max-width: 100%;
   height: auto !important;
   aspect-ratio: 1200 / 630;
-  margin: min(1rem, 2vw) auto;
+  margin: min(4vw, 3rem) auto;
+  border: 2px solid #5f5b9a;
+  border-radius: 0.5rem;
+  box-shadow: clamp(0.2rem, 0.6vw, 0.4rem) clamp(0.2rem, 0.6vw, 0.4rem) 0 #5f5b9a;
+  transform: translate(clamp(-0.2rem, -0.3vw, -0.1rem), 0);
+}
+
+.section {
+  margin: min(6vw, 4rem) 0;
+}
+
+.sub-heading {
+  margin: min(3vw, 2rem) 0;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  text-align: center;
 }
 
 .icon-button-list {
   display: flex;
-  gap: min(0.8vw, 0.5rem);
+  gap: clamp(0.3rem, 1vw, 0.5rem);
   align-items: center;
   justify-content: center;
-  margin: min(1vw, 1rem) auto;
+  margin: min(2.5vw, 1.5rem) auto;
 }
 
 .icon-button {
   display: block;
-  width: min(10vw, 44px);
+  width: min(10vw, 48px);
   aspect-ratio: 1;
+  box-shadow: 0.2rem 0.2rem 0 #5f5b9a;
 }
 
 .form {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  margin: min(3vw, 2.5rem) auto;
+  margin: min(3vw, 1.5rem) auto;
   text-align: center;
 }
 
@@ -77,40 +87,62 @@ button:hover:not(:disabled) {
   display: block;
   width: 100%;
   max-width: 300px;
-  padding: 8px;
+  padding: min(1.5vw, 0.6rem);
   font-family: 'DotGothic16', Tofu, sans-serif;
-  border: 1px solid #ccc;
+  border: 1px solid #5f5b9a;
   border-radius: 4px;
-  box-shadow: 0 0 2px #ccc;
+  box-shadow: 0.2rem 0.2rem 0 #5f5b9a;
+}
+
+.primary-button {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  background-color: #8d83e1;
+  border-radius: 0.5rem;
+  box-shadow: 0.2rem 0.2rem 0 #5f5b9a;
 }
 
 .select-bg {
   display: flex;
-  gap: 1rem;
+  gap: min(2vw, 1rem);
+  align-items: center;
+  justify-content: center;
   max-width: 800px;
-  padding: 1rem;
-  margin: min(3vw, 2.5rem) auto;
+  margin: 0 auto;
 }
 
 .select-bg-label {
   display: block;
   flex: 1;
-  border: 4px solid transparent;
-}
-
-.select-bg-label:hover {
+  overflow: hidden;
   cursor: pointer;
-  border-color: #ccc;
+  border: 0.2rem solid transparent;
+  border-radius: 0.5rem;
 }
 
 .select-bg-label:has(input:checked) {
-  border-color: red;
+  /* box-shadow: 0.2rem 0.2rem 0 #5f5b9a; */
+  border-color: #5f5b9a;
 }
 
 .select-bg-img {
   aspect-ratio: 1200 / 630;
   object-fit: cover;
   object-position: center;
+}
+
+.button-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  justify-content: center;
+  max-width: 800px;
+  margin: min(3vw, 2.5rem) auto;
+
+  @media (width > 800px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .sr-only {
