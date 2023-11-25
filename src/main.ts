@@ -280,6 +280,7 @@ downloadButtonElement.addEventListener('click', async () => {
 resetButtonElement.addEventListener('click', () => {
   objectsContainer.removeChildren()
   setButtonsDisabled(true)
+  messageElement.textContent = 'リセットしました！'
 })
 
 saveButtonElement.addEventListener('click', async () => {
@@ -292,8 +293,9 @@ saveButtonElement.addEventListener('click', async () => {
   await sleep(100)
 
   const historyDataList = convertHistoryDataList(objectsContainer.children)
-
   window.localStorage.setItem('history', JSON.stringify(historyDataList))
+
+  messageElement.textContent = '保存しました！'
 })
 
 Promise.all(
