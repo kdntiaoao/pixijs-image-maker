@@ -13,31 +13,40 @@ import {
   restoreHistoryDataList,
   handleDragEnd,
   handleDragStart,
+  getElement,
+  getElements,
 } from './utils'
 import { BG_IMAGES, OBJECT_IMAGES } from './assets/data'
 
 import './style.css'
 
-const canvasElement = document.getElementById('canvas') as HTMLCanvasElement
-const shareButtonElement = document.querySelector('[data-button="share"]') as HTMLButtonElement
-const downloadButtonElement = document.querySelector('[data-button="download"]') as HTMLButtonElement
-const resetButtonElement = document.querySelector('[data-button="reset"]') as HTMLButtonElement
-const saveButtonElement = document.querySelector('[data-button="save"]') as HTMLButtonElement
-const messageElement = document.querySelector('[data-message]') as HTMLParagraphElement
-const buttonsElement = document.querySelector('[data-buttons]') as HTMLDivElement
-const upwardButtonElement = document.querySelector('[data-button="upward"]') as HTMLButtonElement
-const downwardButtonElement = document.querySelector('[data-button="downward"]') as HTMLButtonElement
-const leftButtonElement = document.querySelector('[data-button="left"]') as HTMLButtonElement
-const rightButtonElement = document.querySelector('[data-button="right"]') as HTMLButtonElement
-const zoomInButtonElement = document.querySelector('[data-button="zoom-in"]') as HTMLButtonElement
-const zoomOutButtonElement = document.querySelector('[data-button="zoom-out"]') as HTMLButtonElement
-const rotateButtonElement = document.querySelector('[data-button="rotate"]') as HTMLButtonElement
-const deleteButtonElement = document.querySelector('[data-button="delete"]') as HTMLButtonElement
-const addTextFormElement = document.querySelector('[data-form="add-text"]') as HTMLFormElement
-const textFieldElement = document.querySelector('[data-text-field]') as HTMLInputElement
-const selectBgRadioElements = document.querySelectorAll('[data-radio="select-bg"]') as NodeListOf<HTMLInputElement>
-const loadingElement = document.querySelector('[data-loading]') as HTMLDivElement
-const loadingCharElements = document.querySelectorAll('[data-loading-char]') as NodeListOf<HTMLSpanElement>
+const canvasElement = getElement<HTMLCanvasElement>('#canvas')
+const shareButtonElement = getElement<HTMLButtonElement>('[data-button="share"]')
+const downloadButtonElement = getElement<HTMLButtonElement>('[data-button="download"]')
+const resetButtonElement = getElement<HTMLButtonElement>('[data-button="reset"]')
+const saveButtonElement = getElement<HTMLButtonElement>('[data-button="save"]')
+const messageElement = getElement<HTMLParagraphElement>('[data-message]')
+const buttonsElement = getElement<HTMLDivElement>('[data-buttons]')
+const upwardButtonElement = getElement<HTMLButtonElement>('[data-button="upward"]')
+const downwardButtonElement = getElement<HTMLButtonElement>('[data-button="downward"]')
+const leftButtonElement = getElement<HTMLButtonElement>('[data-button="left"]')
+const rightButtonElement = getElement<HTMLButtonElement>('[data-button="right"]')
+const zoomInButtonElement = getElement<HTMLButtonElement>('[data-button="zoom-in"]')
+const zoomOutButtonElement = getElement<HTMLButtonElement>('[data-button="zoom-out"]')
+const rotateButtonElement = getElement<HTMLButtonElement>('[data-button="rotate"]')
+const deleteButtonElement = getElement<HTMLButtonElement>('[data-button="delete"]')
+const addTextFormElement = getElement<HTMLFormElement>('[data-form="add-text"]')
+const textFieldElement = getElement<HTMLInputElement>('[data-text-field]')
+const selectBgRadioElements = getElements<HTMLInputElement>('[data-radio="select-bg"]')
+const loadingElement = getElement<HTMLDivElement>('[data-loading]')
+const loadingCharElements = getElements<HTMLSpanElement>('[data-loading-char]')
+
+const moveButtons = [
+  { element: upwardButtonElement, x: 0, y: -10 },
+  { element: downwardButtonElement, x: 0, y: 10 },
+  { element: leftButtonElement, x: -10, y: 0 },
+  { element: rightButtonElement, x: 10, y: 0 },
+]
 
 let selectedObjectContainer: Container | null = null
 let selectedBg: Sprite | null = null
@@ -66,6 +75,7 @@ const selectObject = (objectContainer?: Container) => {
   }
 
   if (!objectContainer) {
+    console.log('No object selected')
     return
   }
 
@@ -136,31 +146,16 @@ Object.values(OBJECT_IMAGES).forEach(({ img, alt }) => {
   buttonsElement.append(buttonElement)
 })
 
-upwardButtonElement.addEventListener('click', () => {
-  if (selectedObjectContainer) {
-    selectedObjectContainer.y -= 10
-  }
+moveButtons.forEach(({ element, x, y }) => {
+  element.addEventListener('click', () => {
+    if (selectedObjectContainer) {
+      selectedObjectContainer.x += x
+      selectedObjectContainer.y += y
+    }
+  })
 })
 
-downwardButtonElement.addEventListener('click', () => {
-  if (selectedObjectContainer) {
-    selectedObjectContainer.y += 10
-  }
-})
-
-leftButtonElement.addEventListener('click', () => {
-  if (selectedObjectContainer) {
-    selectedObjectContainer.x -= 10
-  }
-})
-
-rightButtonElement.addEventListener('click', () => {
-  if (selectedObjectContainer) {
-    selectedObjectContainer.x += 10
-  }
-})
-
-zoomInButtonElement.addEventListener('click', () => {
+const adjustObjectSize = (scaleFactor: number) => {
   if (!selectedObjectContainer) {
     return
   }
@@ -174,47 +169,23 @@ zoomInButtonElement.addEventListener('click', () => {
   }
 
   if (selectedObject instanceof Text) {
-    selectedObject.style.fontSize = parseInt(selectedObject.style.fontSize.toString()) * 1.1 + 4
+    selectedObject.style.fontSize = Math.max(parseInt(selectedObject.style.fontSize.toString()) * scaleFactor, 1)
     selectedObject.style.padding = selectedObject.height / 2
     cover.width = selectedObject.width + selectedObject.style.padding
     cover.height = selectedObject.height + selectedObject.style.padding
     cover.x = cover.width / -2
     cover.y = cover.height / -1.7
   } else if (selectedObject instanceof Sprite) {
-    selectedObject.width = cover.width = selectedObject.width * 1.1
-    selectedObject.height = cover.height = selectedObject.height * 1.1
+    selectedObject.width = cover.width = selectedObject.width * scaleFactor
+    selectedObject.height = cover.height = selectedObject.height * scaleFactor
     cover.x = cover.width / -2
     cover.y = cover.height / -2
   }
-})
+}
 
-zoomOutButtonElement.addEventListener('click', () => {
-  if (!selectedObjectContainer) {
-    return
-  }
+zoomInButtonElement.addEventListener('click', () => adjustObjectSize(1.1))
 
-  const selectedObject = selectedObjectContainer.children.find(
-    (child) => child instanceof Text || child instanceof Sprite
-  )
-
-  if (!selectedObject) {
-    return
-  }
-
-  if (selectedObject instanceof Text) {
-    selectedObject.style.fontSize = Math.max(parseInt(selectedObject.style.fontSize.toString()) / 1.1 - 4, 1)
-    selectedObject.style.padding = selectedObject.height / 2
-    cover.width = selectedObject.width + selectedObject.style.padding
-    cover.height = selectedObject.height + selectedObject.style.padding
-    cover.x = cover.width / -2
-    cover.y = cover.height / -1.7
-  } else if (selectedObject instanceof Sprite) {
-    selectedObject.width = cover.width = selectedObject.width / 1.1
-    selectedObject.height = cover.height = selectedObject.height / 1.1
-    cover.x = cover.width / -2
-    cover.y = cover.height / -2
-  }
-})
+zoomOutButtonElement.addEventListener('click', () => adjustObjectSize(0.9))
 
 rotateButtonElement.addEventListener('click', () => {
   if (selectedObjectContainer) {
