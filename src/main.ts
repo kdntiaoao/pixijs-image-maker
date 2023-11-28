@@ -63,6 +63,22 @@ const setButtonsDisabled = (disabled: boolean) => {
   saveButtonElement.disabled = disabled
 }
 
+const adjustCoverForText = (textObject: Text) => {
+  cover.width = textObject.width + textObject.style.padding
+  cover.height = textObject.height + textObject.style.padding
+  cover.x = cover.width / -2
+  cover.y = cover.height / -1.7
+  console.log('Text:', { width: cover.width, height: cover.height })
+}
+
+const adjustCoverForSprite = (spriteObject: Sprite) => {
+  cover.width = spriteObject.width
+  cover.height = spriteObject.height
+  cover.x = cover.width / -2
+  cover.y = cover.height / -2
+  console.log('Sprite:', { width: cover.width, height: cover.height })
+}
+
 /**
  * オブジェクトを選択し、選択されたオブジェクトのタイプに基づいて必要な操作を行う。
  * @param {Container} objectContainer - 選択されたオブジェクトのコンテナ
@@ -79,21 +95,15 @@ const selectObject = (objectContainer?: Container) => {
     return
   }
 
+  const selectedObject = objectContainer.children[0]
+
   selectedObjectContainer = objectContainer
   selectedObjectContainer.zIndex = 1
 
-  if (selectedObjectContainer.children[0] instanceof Text) {
-    cover.width = selectedObjectContainer.children[0].width + selectedObjectContainer.children[0].style.padding
-    cover.height = selectedObjectContainer.children[0].height + selectedObjectContainer.children[0].style.padding
-    cover.x = cover.width / -2
-    cover.y = cover.height / -1.7
-    console.log('Text:', { width: cover.width, height: cover.height })
-  } else if (selectedObjectContainer.children[0] instanceof Sprite) {
-    cover.width = selectedObjectContainer.children[0].width
-    cover.height = selectedObjectContainer.children[0].height
-    cover.x = cover.width / -2
-    cover.y = cover.height / -2
-    console.log('Sprite:', { width: cover.width, height: cover.height })
+  if (selectedObject instanceof Text) {
+    adjustCoverForText(selectedObject)
+  } else if (selectedObject instanceof Sprite) {
+    adjustCoverForSprite(selectedObject)
   } else {
     cover.width = app.screen.width
     cover.height = app.screen.height
@@ -306,7 +316,7 @@ Promise.all(
 
 // 履歴を読み込む
 ;(async function () {
-  const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') || '')
+  const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') || 'null')
   if (!Array.isArray(rawHistory)) return
 
   const historyData: HistoryData[] = rawHistory
