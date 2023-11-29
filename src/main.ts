@@ -271,6 +271,11 @@ resetButtonElement.addEventListener('click', () => {
   window.localStorage.removeItem('bg')
   messageElement.textContent = 'リセットしました！'
 
+  const query = new URLSearchParams(window.location.search)
+  query.delete('key')
+  const newRelativePathQuery = window.location.pathname + '?' + query.toString()
+  history.pushState(null, '', newRelativePathQuery)
+
   setTimeout(() => {
     if (messageElement.textContent === 'リセットしました！') {
       messageElement.textContent = ''
@@ -294,6 +299,11 @@ saveButtonElement.addEventListener('click', async () => {
   window.localStorage.setItem('bg', bg || Object.keys(BG_IMAGES)[0])
 
   messageElement.textContent = '保存しました！'
+
+  const query = new URLSearchParams(window.location.search)
+  query.delete('key')
+  const newRelativePathQuery = window.location.pathname + '?' + query.toString()
+  history.pushState(null, '', newRelativePathQuery)
 })
 
 Promise.all(
@@ -326,6 +336,10 @@ Promise.all(
   let bg: string | undefined = undefined
 
   try {
+    if (!key) {
+      throw new Error('No key')
+    }
+
     const res = await fetch(
       `https://dev-kdntiaoao-bucket.s3.ap-northeast-1.amazonaws.com/pixijs-image-maker/share/${key}.json`
     )
