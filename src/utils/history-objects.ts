@@ -84,7 +84,6 @@ export const restoreHistoryDataList = async (
         textObject.style.padding = textObject.height / 2
       }
     } else if (historyData[0] === 'img') {
-      console.log('historyData[4]', historyData[4])
       const texture = await Assets.load(OBJECT_IMAGES[historyData[4]].img)
       container = addSprite(app, objectsContainer, texture).spriteContainer
 
