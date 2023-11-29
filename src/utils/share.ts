@@ -1,6 +1,11 @@
+import { HistoryData } from '../types'
 import { getXShareUrl } from './get-x-share-url'
 
-export const share = async (canvasElement: HTMLCanvasElement): Promise<void> => {
+export const share = async (
+  canvasElement: HTMLCanvasElement,
+  historyDataList: HistoryData[],
+  bg: string
+): Promise<void> => {
   const dataURL = canvasElement.toDataURL('image/jpeg', 0.5)
 
   console.log('X Share:', {
@@ -11,7 +16,7 @@ export const share = async (canvasElement: HTMLCanvasElement): Promise<void> => 
 
   const res = await fetch(apiEndpoint, {
     method: 'POST',
-    body: JSON.stringify({ imageData: dataURL }),
+    body: JSON.stringify({ imageData: dataURL, history: historyDataList, bg }),
   })
 
   if (!res.ok) {

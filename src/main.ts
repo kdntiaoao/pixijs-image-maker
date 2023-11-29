@@ -240,8 +240,11 @@ shareButtonElement.addEventListener('click', async () => {
   // 選択されていたSpriteから選択を外すのを待つ
   await sleep(100)
 
+  const historyDataList = convertHistoryDataList(objectsContainer.children)
+  const bg = [...selectBgRadioElements].find((element) => element.checked)?.value || Object.keys(BG_IMAGES)[0]
+
   try {
-    await share(canvasElement)
+    await share(canvasElement, historyDataList, bg)
     messageElement.textContent = '画像を生成しました！'
   } catch (error) {
     messageElement.textContent = '画像の生成に失敗しました'
@@ -316,24 +319,44 @@ Promise.all(
 
 // 履歴を読み込む
 ;(async function () {
-  const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') || 'null')
-  if (!Array.isArray(rawHistory)) return
+  const query = new URLSearchParams(location.search)
+  const key = query.get('key')
 
-  const historyData: HistoryData[] = rawHistory
+  let historyDataList: HistoryData[] = []
+  let bg: string | undefined = undefined
 
-  await restoreHistoryDataList(historyData, app, objectsContainer, (container) => {
+  try {
+    const res = await fetch(
+      `https://dev-kdntiaoao-bucket.s3.ap-northeast-1.amazonaws.com/pixijs-image-maker/share/${key}.json`
+    )
+
+    if (!res.ok) {
+      throw new Error('Network response was not ok')
+    }
+
+    const json = (await res.json()) as { history: HistoryData[]; bg: string }
+    historyDataList = json.history
+
+    bg = json.bg
+  } catch (error) {
+    const rawHistory: unknown = JSON.parse(window.localStorage.getItem('history') || 'null')
+    if (Array.isArray(rawHistory)) {
+      historyDataList = rawHistory
+    }
+
+    bg = window.localStorage.getItem('bg') || Object.keys(BG_IMAGES)[0]
+  }
+
+  const bgValue = bg ? BG_IMAGES[bg as keyof typeof BG_IMAGES] : undefined
+
+  await restoreHistoryDataList(historyDataList, app, objectsContainer, (container) => {
     container.on('pointerdown', onDragStart)
   })
 
   if (objectsContainer.children.length > 0) {
     setButtonsDisabled(false)
   }
-})()
 
-//
-;(async function () {
-  const bg = window.localStorage.getItem('bg') || Object.keys(BG_IMAGES)[0]
-  const bgValue = bg ? BG_IMAGES[bg as keyof typeof BG_IMAGES] : undefined
   let texture: Texture | null = null
 
   if (!bgValue) {
