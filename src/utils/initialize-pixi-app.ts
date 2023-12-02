@@ -4,7 +4,7 @@ const canvasWidth = 1200
 const canvasAspectRatio = 1200 / 630
 const canvasHeight = canvasWidth / canvasAspectRatio
 
-export const initApp = (canvasElement: HTMLCanvasElement): { app: Application } => {
+export const initializePixiApp = (canvasElement: HTMLCanvasElement): { app: Application } => {
   const app = new Application({
     view: canvasElement,
     width: canvasWidth,
