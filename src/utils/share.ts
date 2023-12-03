@@ -12,9 +12,9 @@ export const share = async (
     size: new Blob([dataURL]).size / 1000 + 'kB',
   })
 
-  const apiEndpoint = 'https://dophim7vmhepy2kipjhxau4s6m0darwe.lambda-url.ap-northeast-1.on.aws/'
+  const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT
 
-  const res = await fetch(apiEndpoint, {
+  const res = await fetch(API_ENDPOINT, {
     method: 'POST',
     body: JSON.stringify({ imageData: dataURL, history: historyDataList, bg }),
   })

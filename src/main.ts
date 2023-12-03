@@ -4,6 +4,8 @@ import { BG_IMAGES } from './assets/data'
 
 import './style.css'
 
+const S3_ASSETS_URL = import.meta.env.VITE_S3_ASSETS_URL
+
 const { pixiApp, objectsContainer, setBg, onDragStart, loadingElement, loadingCharElements } = initializeApp()
 
 // 履歴を読み込む
@@ -16,9 +18,7 @@ const { pixiApp, objectsContainer, setBg, onDragStart, loadingElement, loadingCh
 
   if (key) {
     try {
-      const res = await fetch(
-        `https://dev-kdntiaoao-bucket.s3.ap-northeast-1.amazonaws.com/pixijs-image-maker/share/${key}.json`
-      )
+      const res = await fetch(`${S3_ASSETS_URL}/${key}.json`)
 
       if (!res.ok) {
         throw new Error('Network response was not ok')
